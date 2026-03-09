@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
-import json
 
+from agent_workbench.adapters.local.config_loader import YamlAgentConfigLoader
+from agent_workbench.adapters.local.dataset_loader import JsonlDatasetProvider
 from agent_workbench.adapters.local.json_trace_sink import JsonTraceSink
 from agent_workbench.domain.entities.trace import TraceEvent, TraceEventKind
-from agent_workbench.domain.entities.task import TaskModality, TaskSpec
-from agent_workbench.domain.value_objects.risk_level import RiskLevel
 from agent_workbench.reporting.benchmark_report import BenchmarkReportBuilder
 from agent_workbench.reporting.csv_export import export as export_csv
 from agent_workbench.reporting.html_export import export as export_html
@@ -17,55 +17,23 @@ from agent_workbench.reporting.json_export import export as export_json
 from agent_workbench.utils.ids import make_id
 
 
-def _risk_from_label(label: str) -> RiskLevel:
-    normalized = label.upper()
-    if normalized in RiskLevel.__members__:
-        return RiskLevel[normalized]
-    return RiskLevel.LOW
-
-
-def _modality_from_label(label: str) -> TaskModality:
-    normalized = label.lower()
-    mapping = {
-        "text": TaskModality.TEXT,
-        "image": TaskModality.IMAGE,
-        "browser": TaskModality.BROWSER,
-        "computer": TaskModality.COMPUTER,
-    }
-    return mapping.get(normalized, TaskModality.TEXT)
-
-
 @dataclass(slots=True)
 class Runner:
     artifact_root: Path = Path(".artifacts")
-
-    def _load_tasks(self, dataset_path: Path) -> list[TaskSpec]:
-        tasks: list[TaskSpec] = []
-        with (dataset_path / "tasks.jsonl").open("r", encoding="utf-8") as file:
-            for line in file:
-                item = json.loads(line)
-                tasks.append(
-                    TaskSpec(
-                        task_id=item["task_id"],
-                        instruction=item["instruction"],
-                        modality=_modality_from_label(item.get("modality", "text")),
-                        risk_profile=_risk_from_label(item.get("risk_label", "LOW")),
-                        tags=item.get("tags", []),
-                    )
-                )
-        return tasks
+    dataset_provider: JsonlDatasetProvider = field(default_factory=JsonlDatasetProvider)
+    config_loader: YamlAgentConfigLoader = field(default_factory=YamlAgentConfigLoader)
 
     def run(self, dataset: str, config_paths: list[str]) -> dict[str, object]:
         run_id = make_id("run")
         dataset_path = Path(dataset)
-        tasks = self._load_tasks(dataset_path)
+        tasks = self.dataset_provider.load_tasks(str(dataset_path))
+        configs = [self.config_loader.load(config_path) for config_path in config_paths]
 
         trace_path = self.artifact_root / "traces" / f"{run_id}.jsonl"
         trace_sink = JsonTraceSink(trace_path)
         rows: list[dict[str, object]] = []
 
-        for config_path in config_paths:
-            config_id = Path(config_path).stem
+        for config in configs:
             for task in tasks:
                 task_run_id = make_id("taskrun")
                 trace_sink.write(
@@ -74,7 +42,7 @@ class Runner:
                         run_id=run_id,
                         task_run_id=task_run_id,
                         kind=TraceEventKind.PROMPT_SENT,
-                        payload={"config_id": config_id, "task_id": task.task_id},
+                        payload={"config_id": config.config_id, "task_id": task.task_id},
                     )
                 )
                 trace_sink.write(
@@ -89,7 +57,7 @@ class Runner:
                 rows.append(
                     {
                         "task_id": task.task_id,
-                        "config_id": config_id,
+                        "config_id": config.config_id,
                         "status": "completed",
                         "score": 1.0,
                         "risk": task.risk_profile.value,
@@ -98,7 +66,7 @@ class Runner:
 
         report = BenchmarkReportBuilder(
             dataset_id=dataset_path.name,
-            configs=[Path(p).stem for p in config_paths],
+            configs=[config.config_id for config in configs],
         ).build(rows)
 
         outputs_dir = self.artifact_root / "reports" / run_id
@@ -109,7 +77,7 @@ class Runner:
         return {
             "run_id": run_id,
             "dataset": dataset_path.name,
-            "configs": [Path(p).stem for p in config_paths],
+            "configs": [config.config_id for config in configs],
             "rows": len(rows),
             "trace_path": str(trace_path.resolve()),
             "artifacts": [json_path, csv_path, html_path],
