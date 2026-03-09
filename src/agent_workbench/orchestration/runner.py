@@ -60,7 +60,8 @@ class Runner:
         dataset_path = Path(dataset)
         tasks = self._load_tasks(dataset_path)
 
-        trace_sink = JsonTraceSink(self.artifact_root / "traces" / f"{run_id}.jsonl")
+        trace_path = self.artifact_root / "traces" / f"{run_id}.jsonl"
+        trace_sink = JsonTraceSink(trace_path)
         rows: list[dict[str, object]] = []
 
         for config_path in config_paths:
@@ -110,5 +111,6 @@ class Runner:
             "dataset": dataset_path.name,
             "configs": [Path(p).stem for p in config_paths],
             "rows": len(rows),
+            "trace_path": str(trace_path.resolve()),
             "artifacts": [json_path, csv_path, html_path],
         }
