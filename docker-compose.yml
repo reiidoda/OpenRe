@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  awb:
+    image: python:3.11-slim
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: sh -lc "pip install -e .[dev] && awb run --dataset datasets/research_assistant_v1 --config configs/agents/research_basic.yaml"

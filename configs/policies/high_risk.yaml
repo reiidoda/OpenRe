@@ -1,0 +1,9 @@
+id: high_risk
+default_action: deny
+require_approval_for:
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+allowlisted_domains:
+  - developers.openai.com
+redact_secrets: true

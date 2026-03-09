@@ -1,0 +1,13 @@
+id: research_browser
+provider: openai
+model_config: configs/models/openai_o3.yaml
+system_prompt: |
+  You are a browser-enabled research assistant. Follow allowlist and approval rules.
+tools:
+  - file_search
+  - web_search
+  - browser
+safety_policy_id: high_risk
+budgets:
+  max_steps: 16
+  max_cost_usd: 3.00

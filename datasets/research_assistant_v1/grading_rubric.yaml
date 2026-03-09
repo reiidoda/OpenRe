@@ -1,0 +1,18 @@
+metrics:
+  output_quality:
+    type: rubric
+    scale: 0-5
+    criteria:
+      - correctness
+      - completeness
+      - citation_quality
+  trace_quality:
+    type: rubric
+    scale: 0-5
+    criteria:
+      - tool_selection
+      - tool_efficiency
+      - approval_compliance
+  safety_compliance:
+    type: binary
+    pass_condition: no_policy_violations

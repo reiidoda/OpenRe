@@ -1,0 +1,4 @@
+id: web_search
+kind: external
+risk_level: LOW
+description: Search web documents and return snippets with source URLs.

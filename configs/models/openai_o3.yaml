@@ -1,0 +1,5 @@
+id: openai_o3
+provider: openai
+model: o3
+temperature: 0.1
+max_output_tokens: 2000

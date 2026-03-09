@@ -1,0 +1,12 @@
+id: research_multimodal
+provider: openai
+model_config: configs/models/openai_gpt5.yaml
+system_prompt: |
+  You are a multimodal research assistant. You can reason over text and images.
+tools:
+  - file_search
+  - web_search
+safety_policy_id: medium_risk
+budgets:
+  max_steps: 14
+  max_cost_usd: 2.20
