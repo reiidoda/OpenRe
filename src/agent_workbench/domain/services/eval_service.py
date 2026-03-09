@@ -13,4 +13,6 @@ class EvalService:
     evaluators: list[Evaluator]
 
     def evaluate(self, output: str, expected: dict[str, object]) -> list[EvaluationResult]:
-        return [evaluator.evaluate(output=output, expected=expected) for evaluator in self.evaluators]
+        return [
+            evaluator.evaluate(output=output, expected=expected) for evaluator in self.evaluators
+        ]

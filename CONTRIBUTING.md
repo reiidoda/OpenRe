@@ -7,7 +7,10 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e .[dev]
 pre-commit install
+make check
 ```
+
+Run `make precommit` before opening a PR if you want to execute the full hook suite manually.
 
 ## Branch and PR workflow
 
