@@ -5,17 +5,28 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
+from typing import Any
 from typing import Sequence
+from typing import TextIO
 
 from agent_workbench.orchestration.runner import Runner
 
 
-def _print(payload: dict[str, object]) -> None:
-    print(json.dumps(payload, indent=2, sort_keys=True))
+def _emit(payload: dict[str, Any], *, stream: TextIO | None = None) -> None:
+    if stream is None:
+        stream = sys.stdout
+    stream.write(json.dumps(payload, indent=2, sort_keys=True))
+    stream.write("\n")
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="awb", description="Open Agent Workbench CLI")
+    parser.add_argument(
+        "--artifact-root",
+        default=".artifacts",
+        help="Directory for generated traces and report artifacts.",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     run = sub.add_parser("run", help="Run benchmark for one agent config")
@@ -44,50 +55,81 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _planned(command: str, **fields: Any) -> dict[str, Any]:
+    return {"command": command, "status": "planned", **fields}
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    runner = Runner(artifact_root=Path(".artifacts"))
+    runner = Runner(artifact_root=Path(args.artifact_root))
 
-    if args.command == "run":
-        payload = runner.run(dataset=args.dataset, config_paths=[args.config])
-        _print(payload)
-        return 0
+    try:
+        if args.command == "run":
+            payload = {"command": "run", **runner.run(dataset=args.dataset, config_paths=[args.config])}
+            _emit(payload)
+            return 0
 
-    if args.command == "compare":
-        payload = runner.run(dataset=args.dataset, config_paths=args.configs)
-        _print(payload)
-        return 0
+        if args.command == "compare":
+            payload = {"command": "compare", **runner.run(dataset=args.dataset, config_paths=args.configs)}
+            _emit(payload)
+            return 0
 
-    if args.command == "eval":
-        _print({"run_id": args.run_id, "status": "planned", "message": "Eval pipeline scaffolded"})
-        return 0
+        if args.command == "eval":
+            _emit(
+                _planned(
+                    "eval",
+                    run_id=args.run_id,
+                    message="Eval pipeline scaffolded",
+                )
+            )
+            return 0
 
-    if args.command == "optimize":
-        _print(
+        if args.command == "optimize":
+            _emit(
+                _planned(
+                    "optimize",
+                    dataset=args.dataset,
+                    search_space=args.search_space,
+                    message="Optimizer pipeline scaffolded",
+                )
+            )
+            return 0
+
+        if args.command == "approve":
+            _emit(
+                {
+                    "command": "approve",
+                    "request_id": args.request_id,
+                    "decision": args.decision,
+                    "status": "recorded",
+                }
+            )
+            return 0
+
+        if args.command == "report":
+            run_dir = Path(args.artifact_root) / "reports" / args.run_id
+            _emit(
+                {
+                    "command": "report",
+                    "run_id": args.run_id,
+                    "format": args.format,
+                    "path": str(run_dir / f"report.{args.format}"),
+                }
+            )
+            return 0
+
+    except Exception as exc:  # pragma: no cover - defensive CLI boundary
+        _emit(
             {
-                "dataset": args.dataset,
-                "search_space": args.search_space,
-                "status": "planned",
-                "message": "Optimizer pipeline scaffolded",
-            }
+                "command": str(args.command),
+                "status": "error",
+                "error": {"type": exc.__class__.__name__, "message": str(exc)},
+            },
+            stream=sys.stderr,
         )
-        return 0
+        return 1
 
-    if args.command == "approve":
-        _print(
-            {
-                "request_id": args.request_id,
-                "decision": args.decision,
-                "status": "recorded",
-            }
-        )
-        return 0
-
-    if args.command == "report":
-        run_dir = Path(".artifacts") / "reports" / args.run_id
-        _print({"run_id": args.run_id, "format": args.format, "path": str(run_dir / f"report.{args.format}")})
-        return 0
-
+    _emit({"status": "error", "error": {"type": "UnknownCommand", "message": "Unsupported command"}})
     return 1
 
 
