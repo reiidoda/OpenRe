@@ -14,9 +14,7 @@ class SqliteStore:
     def connect(self) -> sqlite3.Connection:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(self.db_path)
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS key_value (k TEXT PRIMARY KEY, v TEXT NOT NULL)"
-        )
+        conn.execute("CREATE TABLE IF NOT EXISTS key_value (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
         conn.commit()
         return conn
 

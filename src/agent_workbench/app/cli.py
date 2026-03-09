@@ -65,12 +65,18 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         if args.command == "run":
-            payload = {"command": "run", **runner.run(dataset=args.dataset, config_paths=[args.config])}
+            payload = {
+                "command": "run",
+                **runner.run(dataset=args.dataset, config_paths=[args.config]),
+            }
             _emit(payload)
             return 0
 
         if args.command == "compare":
-            payload = {"command": "compare", **runner.run(dataset=args.dataset, config_paths=args.configs)}
+            payload = {
+                "command": "compare",
+                **runner.run(dataset=args.dataset, config_paths=args.configs),
+            }
             _emit(payload)
             return 0
 
@@ -129,7 +135,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 1
 
-    _emit({"status": "error", "error": {"type": "UnknownCommand", "message": "Unsupported command"}})
+    _emit(
+        {"status": "error", "error": {"type": "UnknownCommand", "message": "Unsupported command"}}
+    )
     return 1
 
 

@@ -1,7 +1,9 @@
-.PHONY: install lint test typecheck check run-example
+.PHONY: install lint test typecheck check precommit run-example
+
+PYTHON ?= python3
 
 install:
-	python -m pip install -e .[dev]
+	$(PYTHON) -m pip install -e .[dev]
 
 lint:
 	ruff check src tests examples scripts
@@ -14,5 +16,8 @@ typecheck:
 
 check: lint test typecheck
 
+precommit:
+	pre-commit run --all-files
+
 run-example:
-	python examples/run_single_agent.py
+	$(PYTHON) examples/run_single_agent.py
