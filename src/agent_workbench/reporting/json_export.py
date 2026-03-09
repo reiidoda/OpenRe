@@ -8,8 +8,12 @@ from pathlib import Path
 from typing import Any
 
 
+def _is_dataclass_instance(value: Any) -> bool:
+    return is_dataclass(value) and not isinstance(value, type)
+
+
 def _convert(value: Any) -> Any:
-    if is_dataclass(value):
+    if _is_dataclass_instance(value):
         return asdict(value)
     return value
 

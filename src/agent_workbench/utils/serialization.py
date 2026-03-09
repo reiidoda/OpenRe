@@ -8,10 +8,14 @@ import json
 from typing import Any
 
 
+def _is_dataclass_instance(value: Any) -> bool:
+    return is_dataclass(value) and not isinstance(value, type)
+
+
 def to_jsonable(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat()
-    if is_dataclass(value):
+    if _is_dataclass_instance(value):
         return {k: to_jsonable(v) for k, v in asdict(value).items()}
     if isinstance(value, dict):
         return {k: to_jsonable(v) for k, v in value.items()}
