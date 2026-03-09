@@ -1,11 +1,11 @@
 # research_assistant_v1
 
 ## Purpose
-Baseline dataset for research-assistant tasks over files and web sources.
+Baseline dataset for research-assistant tasks over local files and web sources.
 
 ## Composition
-- 5 tasks with reproducible instructions.
-- Mix of summarization, comparison, citation, and policy-aware tool usage.
+- 5 reproducible tasks covering summarization, comparison, citation retrieval, multimodal reasoning, and safety-aware planning.
+- Mixed modalities to support a gradual path from text-first to browser/computer-enabled execution.
 
 ## Splits
 - train: 3 tasks
@@ -13,4 +13,5 @@ Baseline dataset for research-assistant tasks over files and web sources.
 - test: 1 task
 
 ## Safety notes
-Tasks are labeled with risk levels to drive approval-flow testing.
+- Every task includes a risk label (`LOW`, `MEDIUM`, `HIGH`) used by policy and approval-flow tests.
+- Browser-oriented tasks are intentionally marked as higher risk to validate approval boundaries.
