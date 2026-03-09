@@ -24,7 +24,9 @@ class JsonlDatasetProvider:
             )
 
         tasks: list[TaskSpec] = []
-        for line_no, raw_line in enumerate(tasks_path.read_text(encoding="utf-8").splitlines(), start=1):
+        for line_no, raw_line in enumerate(
+            tasks_path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             if not raw_line.strip():
                 continue
             try:

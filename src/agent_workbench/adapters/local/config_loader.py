@@ -28,9 +28,7 @@ class YamlAgentConfigLoader:
         path = Path(config_path)
 
         if not path.exists():
-            raise LoaderValidationError(
-                f"Config validation failed: file does not exist '{path}'."
-            )
+            raise LoaderValidationError(f"Config validation failed: file does not exist '{path}'.")
 
         try:
             raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -57,7 +55,11 @@ class YamlAgentConfigLoader:
         safety_policy_id = self._require_str(raw, "safety_policy_id", path)
 
         tools = raw.get("tools")
-        if not isinstance(tools, list) or not tools or any(not isinstance(tool, str) for tool in tools):
+        if (
+            not isinstance(tools, list)
+            or not tools
+            or any(not isinstance(tool, str) for tool in tools)
+        ):
             raise LoaderValidationError(
                 f"Config validation failed: field 'tools' must be a non-empty list[str] in '{path}'."
             )
