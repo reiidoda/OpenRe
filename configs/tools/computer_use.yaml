@@ -1,0 +1,4 @@
+id: computer_use
+kind: external
+risk_level: HIGH
+description: Execute guarded UI actions in isolated environment with approval.

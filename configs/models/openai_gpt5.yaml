@@ -1,0 +1,6 @@
+id: openai_gpt5
+provider: openai
+model: gpt-5
+reasoning_effort: medium
+temperature: 0.2
+max_output_tokens: 2500

@@ -1,0 +1,12 @@
+id: research_basic
+provider: openai
+model_config: configs/models/openai_gpt5.yaml
+system_prompt: |
+  You are a research assistant. Use tools only when needed. Cite sources.
+tools:
+  - file_search
+  - web_search
+safety_policy_id: medium_risk
+budgets:
+  max_steps: 12
+  max_cost_usd: 1.50

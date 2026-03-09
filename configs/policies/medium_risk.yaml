@@ -1,0 +1,9 @@
+id: medium_risk
+default_action: allow
+require_approval_for:
+  - HIGH
+  - CRITICAL
+allowlisted_domains:
+  - developers.openai.com
+  - docs.python.org
+redact_secrets: true

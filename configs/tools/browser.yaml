@@ -1,0 +1,4 @@
+id: browser
+kind: external
+risk_level: MEDIUM
+description: Navigate allowlisted web pages and extract visible text.

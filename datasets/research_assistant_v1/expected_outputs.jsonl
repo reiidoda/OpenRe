@@ -1,0 +1,5 @@
+{"task_id":"ra_001","expected_fields":["bullets"],"quality_notes":"Includes project scope and value proposition."}
+{"task_id":"ra_002","expected_fields":["comparison_table","narrative"],"quality_notes":"Mentions max_steps and max_cost_usd."}
+{"task_id":"ra_003","expected_fields":["citations"],"quality_notes":"At least two authoritative URLs with brief relevance."}
+{"task_id":"ra_004","expected_fields":["trend_1","trend_2","caveat"],"quality_notes":"Grounded in visible image evidence."}
+{"task_id":"ra_005","expected_fields":["plan_steps","safety_checks"],"quality_notes":"Includes allowlist and approval gate handling."}

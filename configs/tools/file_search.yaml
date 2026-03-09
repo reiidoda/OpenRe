@@ -1,0 +1,4 @@
+id: file_search
+kind: local
+risk_level: LOW
+description: Search local repository files and return matched excerpts.

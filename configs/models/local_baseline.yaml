@@ -1,0 +1,5 @@
+id: local_baseline
+provider: local
+model: baseline-mock
+temperature: 0.0
+max_output_tokens: 1500

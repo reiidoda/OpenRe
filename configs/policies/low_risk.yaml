@@ -1,0 +1,6 @@
+id: low_risk
+default_action: allow
+require_approval_for:
+  - CRITICAL
+allowlisted_domains: []
+redact_secrets: true
