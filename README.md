@@ -16,6 +16,8 @@ Open-source workbench for benchmarking, tracing, optimizing, and safely operatin
 
 Most agent repos show demos, not engineering systems. This repo is benchmark-first, trace-first, and safety-first so changes can be measured and audited.
 
+OpenRe is designed to improve how AI systems are developed and deployed: detect regressions early, enforce safer execution, and make improvements repeatable with evidence.
+
 ## Supported tasks
 
 - Text research over local files and web search.

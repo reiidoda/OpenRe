@@ -10,13 +10,24 @@
 
 ## Label taxonomy
 
-- `milestone:M0` ... `milestone:M5`
+- `milestone:M0` ... `milestone:M6`
 - `type:feature`
 - `type:docs`
 - `type:test`
 - `type:safety`
 - `type:infra`
 - `priority:P0` ... `priority:P3`
+
+## Planning lens
+- Prioritize work that improves measurability, safety, and repeatability first.
+- Require explicit benchmark and risk-impact statements in milestone planning.
+- Treat optimization work as valid only when eval evidence improves.
+
+## Program checkpoints
+1. Regression prevention effectiveness (quality and safety).
+2. Approval-policy enforcement coverage.
+3. Trace completeness and auditability.
+4. Cost/latency performance trends under benchmark load.
 
 ## Workflow
 
