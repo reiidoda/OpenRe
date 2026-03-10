@@ -11,6 +11,9 @@
 - Maintenance/Reliability/Availability/Consistency: `docs/25_maintenance_reliability_consistency_availability.md`
 - Design Principles + UML: `docs/26_design_principles_and_uml.md`
 - AI/ML/DL/NLP/Neuroscience/Data Science: `docs/27_ai_ml_dl_nlp_neuroscience_data_science.md`
+- SEO + discoverability strategy: `docs/29_seo_and_discoverability.md`
+- Discoverability execution plan: `docs/30_discoverability_execution_plan.md`
+- Community growth and contributor activation: `docs/31_community_growth_and_contributor_activation.md`
 
 ## Source influence map
 - API design patterns and lifecycle consistency: `API Desing Patterns.pdf`
