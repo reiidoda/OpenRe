@@ -1,8 +1,31 @@
-# OpenRe
+# OpenRe: AI Agent Evaluation, Benchmarking, Tracing, and Safety Workbench
 
 ![OpenRe banner](assets/readme/openre-banner.svg)
 
-Open-source workbench for benchmarking, tracing, optimizing, and safely operating multimodal agents with human approval.
+[![CI](https://github.com/reiidoda/OpenRe/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/reiidoda/OpenRe/actions/workflows/ci.yml)
+[![Eval Regression](https://github.com/reiidoda/OpenRe/actions/workflows/eval-regression.yml/badge.svg?branch=main)](https://github.com/reiidoda/OpenRe/actions/workflows/eval-regression.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-white)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-black)](pyproject.toml)
+
+Open-source workbench for benchmarking, tracing, optimizing, and safely operating multimodal AI agents with human approval.
+
+## Keywords
+AI agents, agent evaluation, LLM evaluation, agent benchmarking, agent observability, AI safety, multimodal agents, prompt optimization, tool-use evaluation, trace-based debugging.
+
+## Table of contents
+- [Why this exists](#why-this-exists)
+- [How OpenRe improves future AI systems](#how-openre-improves-future-ai-systems)
+- [Supported tasks](#supported-tasks)
+- [Architecture diagram](#architecture-diagram)
+- [Quickstart](#quickstart)
+- [Example commands](#example-commands)
+- [Failure cases](#failure-cases)
+- [Safety model](#safety-model)
+- [Dataset format](#dataset-format)
+- [Plugin/adapters](#pluginadapters)
+- [Roadmap](#roadmap)
+- [Enterprise docs](#enterprise-docs)
+- [Contributing](#contributing)
 
 | Snapshot | Value |
 | --- | --- |
@@ -14,9 +37,17 @@ Open-source workbench for benchmarking, tracing, optimizing, and safely operatin
 
 ## Why this exists
 
-Most agent repos show demos, not engineering systems. This repo is benchmark-first, trace-first, and safety-first so changes can be measured and audited.
+Most agent repos show demos, not engineering systems. OpenRe is benchmark-first, trace-first, and safety-first so behavior changes are measurable and auditable.
 
-OpenRe is designed to improve how AI systems are developed and deployed: detect regressions early, enforce safer execution, and make improvements repeatable with evidence.
+## How OpenRe improves future AI systems
+
+OpenRe is designed to improve how AI systems are developed and deployed:
+- detect regressions early when models, prompts, or tools change
+- enforce safer execution with policy and approval gates
+- collect structured traces and benchmarks to reveal what works
+- make improvements repeatable through eval-driven iteration
+
+OpenRe improves engineering quality, reliability, and trust in AI products. It does not directly create a new base model architecture.
 
 ## Supported tasks
 
@@ -39,16 +70,14 @@ flowchart LR
 
 Additional system/domain/OO flow graphs are available in [docs/03_system_context.md](docs/03_system_context.md), [docs/04_container_architecture.md](docs/04_container_architecture.md), [docs/06_domain_model.md](docs/06_domain_model.md), and [docs/07_oo_design.md](docs/07_oo_design.md).
 
-Enterprise-level design documentation is available in [docs/28_enterprise_reference_map.md](docs/28_enterprise_reference_map.md), including HLD, LLD, database strategy, API/security, distributed architecture, performance, UML, and AI/ML roadmap views.
-
 ## Quickstart
 
 ```bash
 git clone <repo-url>
-cd open-agent-workbench
-python -m venv .venv
+cd OpenRe
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e '.[dev]'
 awb run --dataset datasets/research_assistant_v1 --config configs/agents/research_basic.yaml
 ```
 
@@ -91,6 +120,12 @@ Each task includes task id, instruction, expected output fields, grading rubric 
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md) and [MILESTONES.md](MILESTONES.md).
+
+## Enterprise docs
+
+Enterprise-level architecture and engineering documentation is indexed in [docs/28_enterprise_reference_map.md](docs/28_enterprise_reference_map.md).
+
+SEO and discoverability strategy is documented in [docs/29_seo_and_discoverability.md](docs/29_seo_and_discoverability.md).
 
 ## Contributing
 

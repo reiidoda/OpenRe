@@ -1,4 +1,4 @@
-.PHONY: install lint test typecheck check precommit run-example
+.PHONY: install lint test typecheck docs-check check precommit run-example
 
 PYTHON ?= python3
 
@@ -14,7 +14,10 @@ test:
 typecheck:
 	mypy src
 
-check: lint test typecheck
+docs-check:
+	$(PYTHON) scripts/check_markdown_links.py
+
+check: lint test typecheck docs-check
 
 precommit:
 	pre-commit run --all-files
