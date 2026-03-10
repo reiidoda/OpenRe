@@ -17,3 +17,10 @@ Risk classifier, allowlists, approval queue, audit log, guarded computer-use stu
 
 ## M5 - Multimodal polished demo
 Image tasks, browser/computer demo, HTML dashboard, diagrams, demo assets.
+
+## M6 - Enterprise architecture hardening
+- Domain database decomposition with inter-DB contracts.
+- Event-driven scaling and reliability SLO rollout.
+- API security hardening and protocol/edge strategy.
+- Software quality metrics + SCM governance baseline.
+- AI/ML system expansion roadmap with performance/cost guardrails.

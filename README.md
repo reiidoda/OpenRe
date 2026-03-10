@@ -37,6 +37,8 @@ flowchart LR
 
 Additional system/domain/OO flow graphs are available in [docs/03_system_context.md](docs/03_system_context.md), [docs/04_container_architecture.md](docs/04_container_architecture.md), [docs/06_domain_model.md](docs/06_domain_model.md), and [docs/07_oo_design.md](docs/07_oo_design.md).
 
+Enterprise-level design documentation is available in [docs/28_enterprise_reference_map.md](docs/28_enterprise_reference_map.md), including HLD, LLD, database strategy, API/security, distributed architecture, performance, UML, and AI/ML roadmap views.
+
 ## Quickstart
 
 ```bash

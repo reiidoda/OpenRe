@@ -26,5 +26,14 @@ Because this repo concerns agent safety and evaluation:
 ## Enforcement
 Maintainers may edit, remove, reject, or revert contributions that violate this code of conduct. Repeated or severe violations may lead to temporary or permanent bans.
 
+## Incident Handling
+- Reports are acknowledged as quickly as possible and triaged by maintainers.
+- High-risk incidents (security/safety harassment) are prioritized immediately.
+- Enforcement decisions are documented internally for consistency.
+
+## Transparency and Accountability
+- Public moderation actions may be summarized when appropriate to protect community trust.
+- Contributors may request clarification on moderation outcomes through maintainers.
+
 ## Reporting
 Please report issues privately to the maintainers via the security or governance contact path listed in this repository.
