@@ -66,26 +66,34 @@ def test_cli_compare_outputs_json(capsys, tmp_path: Path) -> None:
     assert payload["summary"]["task_runs"] == 10
     assert payload["summary"]["completed"] == 10
     assert payload["summary"]["success_rate"] == 1.0
+    assert payload["summary"]["avg_score"] == 1.0
+    assert payload["summary"]["avg_latency_ms"] == 0.0
+    assert payload["summary"]["avg_cost_usd"] == 0.0
     assert payload["summary"]["estimated_total_cost_usd"] == 0.0
+    assert payload["summary"]["latency_is_placeholder"] is True
     assert payload["summary"]["cost_is_placeholder"] is True
-    assert payload["summary"]["config_summaries"] == [
-        {
-            "config_id": "research_basic",
-            "task_runs": 5,
-            "completed": 5,
-            "success_rate": 1.0,
-            "estimated_cost_usd": 0.0,
-            "cost_is_placeholder": True,
-        },
-        {
-            "config_id": "research_multimodal",
-            "task_runs": 5,
-            "completed": 5,
-            "success_rate": 1.0,
-            "estimated_cost_usd": 0.0,
-            "cost_is_placeholder": True,
-        },
-    ]
+    config_summaries = payload["summary"]["config_summaries"]
+    assert len(config_summaries) == 2
+    assert config_summaries[0]["config_id"] == "research_basic"
+    assert config_summaries[0]["task_runs"] == 5
+    assert config_summaries[0]["completed"] == 5
+    assert config_summaries[0]["success_rate"] == 1.0
+    assert config_summaries[0]["avg_score"] == 1.0
+    assert config_summaries[0]["avg_latency_ms"] == 0.0
+    assert config_summaries[0]["avg_cost_usd"] == 0.0
+    assert config_summaries[0]["estimated_cost_usd"] == 0.0
+    assert config_summaries[0]["latency_is_placeholder"] is True
+    assert config_summaries[0]["cost_is_placeholder"] is True
+    assert config_summaries[1]["config_id"] == "research_multimodal"
+    assert config_summaries[1]["task_runs"] == 5
+    assert config_summaries[1]["completed"] == 5
+    assert config_summaries[1]["success_rate"] == 1.0
+    assert config_summaries[1]["avg_score"] == 1.0
+    assert config_summaries[1]["avg_latency_ms"] == 0.0
+    assert config_summaries[1]["avg_cost_usd"] == 0.0
+    assert config_summaries[1]["estimated_cost_usd"] == 0.0
+    assert config_summaries[1]["latency_is_placeholder"] is True
+    assert config_summaries[1]["cost_is_placeholder"] is True
 
 
 def test_cli_compare_requires_at_least_two_configs(capsys, tmp_path: Path) -> None:

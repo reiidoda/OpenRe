@@ -37,6 +37,11 @@ def test_json_export_includes_run_metadata_and_rows(tmp_path: Path) -> None:
     assert isinstance(payload["run"]["generated_at"], str)
     assert len(payload["rows"]) == 10
     assert payload["summary"]["task_runs"] == 10
+    assert payload["summary"]["avg_score"] == 1.0
+    assert payload["summary"]["avg_latency_ms"] == 0.0
+    assert payload["summary"]["avg_cost_usd"] == 0.0
+    assert "ra_001" in payload["benchmark"]["per_task_scores"]
+    assert payload["benchmark"]["failure_clusters"] == {}
 
     assert report_json.parent.name == "v1"
     assert report_json.parent.parent.name == run_id
