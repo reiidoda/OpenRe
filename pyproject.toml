@@ -10,6 +10,28 @@ readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Open Agent Workbench Maintainers" }]
 license = { text = "Apache-2.0" }
+keywords = [
+  "ai-agents",
+  "llm-evaluation",
+  "agent-benchmarking",
+  "ai-safety",
+  "observability",
+  "multimodal-ai",
+  "prompt-optimization",
+  "tool-use",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: System :: Monitoring",
+]
 dependencies = [
   "PyYAML>=6.0.1",
 ]
@@ -25,6 +47,12 @@ dev = [
 
 [project.scripts]
 awb = "agent_workbench.app.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/reiidoda/OpenRe"
+Repository = "https://github.com/reiidoda/OpenRe"
+Issues = "https://github.com/reiidoda/OpenRe/issues"
+Documentation = "https://github.com/reiidoda/OpenRe/tree/main/docs"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

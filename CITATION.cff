@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: OpenRe
+authors:
+  - family-names: OpenRe Maintainers
+    given-names: Core Team
+message: "If you use OpenRe in research or production benchmarking, please cite this repository."
+repository-code: "https://github.com/reiidoda/OpenRe"
+url: "https://github.com/reiidoda/OpenRe"
+license: Apache-2.0
+abstract: >-
+  OpenRe is an open-source workbench for AI agent evaluation, benchmarking,
+  tracing, optimization, and safety governance with human approval workflows.
+keywords:
+  - ai-agents
+  - llm-evaluation
+  - agent-benchmarking
+  - ai-safety
+  - multimodal-agents
+  - observability
+  - trace-analysis
+  - prompt-optimization
