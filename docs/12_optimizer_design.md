@@ -42,3 +42,9 @@ normalize_weights: true
 
 ## Loop
 Candidate generation -> run -> evaluate -> rank -> select -> validate.
+
+## Dev/Test Optimization Loop
+- Run candidate search on `splits/dev.jsonl` and select the highest-ranked candidate from dev only.
+- Run isolated validation on `splits/test.jsonl` for the dev winner only.
+- Promotion is explicit and recorded with a boolean decision + reason.
+- Current implementation: `DevTestOptimizationLoop` (`src/agent_workbench/optimizer/dev_test_loop.py`).
