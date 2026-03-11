@@ -27,7 +27,7 @@ def test_runner_creates_run_scoped_trace_file(tmp_path: Path) -> None:
     )
 
     run_id = str(result["run_id"])
-    trace_path = artifact_root / "traces" / f"{run_id}.jsonl"
+    trace_path = artifact_root / "traces" / run_id / "trace.jsonl"
 
     assert trace_path.exists()
     assert trace_path.is_file()
@@ -44,7 +44,7 @@ def test_trace_sink_writes_ndjson_with_expected_event_schema(tmp_path: Path) -> 
     )
     run_id = str(result["run_id"])
 
-    trace_path = artifact_root / "traces" / f"{run_id}.jsonl"
+    trace_path = artifact_root / "traces" / run_id / "trace.jsonl"
     raw = trace_path.read_text(encoding="utf-8")
     lines = raw.splitlines()
 
