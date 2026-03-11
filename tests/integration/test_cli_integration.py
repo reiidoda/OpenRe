@@ -173,4 +173,4 @@ def test_cli_report_outputs_json(capsys, tmp_path: Path) -> None:
     assert payload["command"] == "report"
     assert payload["run_id"] == "run_123"
     assert payload["format"] == "html"
-    assert payload["path"] == str(artifact_root / "reports" / "run_123" / "report.html")
+    assert payload["path"] == str(artifact_root / "reports" / "run_123" / "v1" / "report.html")

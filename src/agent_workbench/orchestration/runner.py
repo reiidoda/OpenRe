@@ -15,6 +15,7 @@ from agent_workbench.reporting.benchmark_report import BenchmarkReportBuilder
 from agent_workbench.reporting.csv_export import export as export_csv
 from agent_workbench.reporting.html_export import export as export_html
 from agent_workbench.reporting.json_export import export as export_json
+from agent_workbench.utils.clock import utc_now_iso
 from agent_workbench.utils.ids import make_id
 
 
@@ -23,6 +24,7 @@ class Runner:
     artifact_root: Path = Path(".artifacts")
     dataset_provider: JsonlDatasetProvider = field(default_factory=JsonlDatasetProvider)
     config_loader: YamlAgentConfigLoader = field(default_factory=YamlAgentConfigLoader)
+    report_schema_version: str = "awb.report.v1"
 
     @staticmethod
     def _build_summary(rows: list[dict[str, object]], config_ids: list[str]) -> dict[str, Any]:
@@ -102,19 +104,44 @@ class Runner:
             configs=[config.config_id for config in configs],
         ).build(rows)
 
-        outputs_dir = self.artifact_root / "reports" / run_id
-        json_path = export_json(report, outputs_dir / "report.json")
-        csv_path = export_csv(rows, outputs_dir / "summary.csv")
+        config_ids = [config.config_id for config in configs]
+        summary = self._build_summary(rows, config_ids)
+        outputs_dir = self.artifact_root / "reports" / run_id / "v1"
+        run_metadata = {
+            "run_id": run_id,
+            "dataset_id": dataset_path.name,
+            "config_ids": config_ids,
+            "task_count": len(tasks),
+            "task_run_count": len(rows),
+            "generated_at": utc_now_iso(),
+        }
+        json_payload = {
+            "schema_version": self.report_schema_version,
+            "run": run_metadata,
+            "summary": summary,
+            "rows": rows,
+            "benchmark": report,
+        }
+
+        json_path = export_json(json_payload, outputs_dir / "report.json")
+        csv_path = export_csv(
+            rows,
+            outputs_dir / "summary.csv",
+            metadata={
+                "schema_version": self.report_schema_version,
+                "run_id": run_id,
+                "dataset_id": dataset_path.name,
+            },
+        )
         html_path = export_html("Open Agent Workbench Benchmark", rows, outputs_dir / "report.html")
 
-        config_ids = [config.config_id for config in configs]
         return {
             "run_id": run_id,
             "dataset": dataset_path.name,
             "configs": config_ids,
             "rows": len(rows),
             "result_table": rows,
-            "summary": self._build_summary(rows, config_ids),
+            "summary": summary,
             "trace_path": str(trace_path.resolve()),
             "artifacts": [json_path, csv_path, html_path],
         }
