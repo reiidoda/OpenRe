@@ -50,9 +50,7 @@ class Runner:
         config_summaries: list[dict[str, object]] = []
         for config_id in config_ids:
             config_evaluations = [
-                evaluation
-                for evaluation in task_evaluations
-                if evaluation.config_id == config_id
+                evaluation for evaluation in task_evaluations if evaluation.config_id == config_id
             ]
             config_metrics = EvalHarness.aggregate_metrics(config_evaluations)
             config_summaries.append(

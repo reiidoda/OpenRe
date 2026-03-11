@@ -53,9 +53,7 @@ class EvalHarness:
         evaluator_scores = {result.metric_name: round(result.score, 4) for result in results}
 
         output_scores = [
-            result.score
-            for result in results
-            if result.metric_name in {"exact_match", "rubric"}
+            result.score for result in results if result.metric_name in {"exact_match", "rubric"}
         ]
         trace_scores = [result.score for result in results if result.metric_name == "trace_quality"]
 
