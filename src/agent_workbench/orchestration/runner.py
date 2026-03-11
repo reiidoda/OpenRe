@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
+from typing import Any
 
 from agent_workbench.adapters.local.config_loader import YamlAgentConfigLoader
 from agent_workbench.adapters.local.dataset_loader import JsonlDatasetProvider
@@ -22,6 +23,38 @@ class Runner:
     artifact_root: Path = Path(".artifacts")
     dataset_provider: JsonlDatasetProvider = field(default_factory=JsonlDatasetProvider)
     config_loader: YamlAgentConfigLoader = field(default_factory=YamlAgentConfigLoader)
+
+    @staticmethod
+    def _build_summary(rows: list[dict[str, object]], config_ids: list[str]) -> dict[str, Any]:
+        task_runs = len(rows)
+        completed = sum(1 for row in rows if row.get("status") == "completed")
+        success_rate = float(completed / task_runs) if task_runs else 0.0
+
+        config_summaries: list[dict[str, object]] = []
+        for config_id in config_ids:
+            config_rows = [row for row in rows if row.get("config_id") == config_id]
+            config_total = len(config_rows)
+            config_completed = sum(1 for row in config_rows if row.get("status") == "completed")
+            config_success = float(config_completed / config_total) if config_total else 0.0
+            config_summaries.append(
+                {
+                    "config_id": config_id,
+                    "task_runs": config_total,
+                    "completed": config_completed,
+                    "success_rate": round(config_success, 4),
+                    "estimated_cost_usd": 0.0,
+                    "cost_is_placeholder": True,
+                }
+            )
+
+        return {
+            "task_runs": task_runs,
+            "completed": completed,
+            "success_rate": round(success_rate, 4),
+            "estimated_total_cost_usd": 0.0,
+            "cost_is_placeholder": True,
+            "config_summaries": config_summaries,
+        }
 
     def run(self, dataset: str, config_paths: list[str]) -> dict[str, object]:
         run_id = make_id("run")
@@ -74,11 +107,14 @@ class Runner:
         csv_path = export_csv(rows, outputs_dir / "summary.csv")
         html_path = export_html("Open Agent Workbench Benchmark", rows, outputs_dir / "report.html")
 
+        config_ids = [config.config_id for config in configs]
         return {
             "run_id": run_id,
             "dataset": dataset_path.name,
-            "configs": [config.config_id for config in configs],
+            "configs": config_ids,
             "rows": len(rows),
+            "result_table": rows,
+            "summary": self._build_summary(rows, config_ids),
             "trace_path": str(trace_path.resolve()),
             "artifacts": [json_path, csv_path, html_path],
         }

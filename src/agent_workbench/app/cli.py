@@ -73,6 +73,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
 
         if args.command == "compare":
+            if len(args.configs) < 2:
+                raise ValueError("compare requires at least 2 config paths via --configs.")
             payload = {
                 "command": "compare",
                 **runner.run(dataset=args.dataset, config_paths=args.configs),
