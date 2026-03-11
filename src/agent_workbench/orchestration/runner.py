@@ -187,6 +187,8 @@ class Runner:
                     {
                         "task_id": task.task_id,
                         "config_id": config.config_id,
+                        "task_run_id": task_run_id,
+                        "trace_path": str(trace_path.resolve()),
                         "status": "completed",
                         "output_quality_score": task_evaluation.output_quality_score,
                         "trace_quality_score": task_evaluation.trace_quality_score,
@@ -242,6 +244,7 @@ class Runner:
             "Open Agent Workbench Benchmark",
             rows,
             filesystem_store.run_report_path(run_id, "v1/report.html"),
+            cluster_details=report.failure_cluster_details,
         )
         sqlite_store.put_run_metadata(
             run_id=run_id,

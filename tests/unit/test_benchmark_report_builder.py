@@ -11,6 +11,8 @@ def test_report_builder_builds_per_task_scores_and_failure_clusters() -> None:
             {
                 "task_id": "ra_001",
                 "config_id": "cfg_a",
+                "task_run_id": "taskrun_a1",
+                "trace_path": "/tmp/trace.jsonl",
                 "score": 0.8,
                 "failure_labels": ["sequence_violation"],
             },
@@ -23,6 +25,8 @@ def test_report_builder_builds_per_task_scores_and_failure_clusters() -> None:
             {
                 "task_id": "ra_002",
                 "config_id": "cfg_a",
+                "task_run_id": "taskrun_a2",
+                "trace_path": "/tmp/trace.jsonl",
                 "score": 0.9,
                 "failure_labels": ["approval_missing"],
             },
@@ -37,4 +41,26 @@ def test_report_builder_builds_per_task_scores_and_failure_clusters() -> None:
         "sequence_violation": 1,
         "approval_missing": 1,
     }
+    assert report.failure_cluster_details == [
+        {
+            "label": "approval_missing",
+            "count": 1,
+            "representative": {
+                "task_id": "ra_002",
+                "config_id": "cfg_a",
+                "task_run_id": "taskrun_a2",
+                "trace_path": "/tmp/trace.jsonl",
+            },
+        },
+        {
+            "label": "sequence_violation",
+            "count": 1,
+            "representative": {
+                "task_id": "ra_001",
+                "config_id": "cfg_a",
+                "task_run_id": "taskrun_a1",
+                "trace_path": "/tmp/trace.jsonl",
+            },
+        },
+    ]
     assert report.best_config == "cfg_b"

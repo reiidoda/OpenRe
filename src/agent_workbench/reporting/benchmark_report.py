@@ -46,6 +46,47 @@ def _failure_clusters(rows: list[dict[str, object]]) -> dict[str, int]:
     return clusters
 
 
+def _failure_cluster_details(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    counts = _failure_clusters(rows)
+    representatives: dict[str, dict[str, str]] = {}
+
+    for row in rows:
+        raw_labels = row.get("failure_labels")
+        if not isinstance(raw_labels, list):
+            continue
+        for label in raw_labels:
+            if not isinstance(label, str):
+                continue
+            key = label.strip()
+            if not key or key in representatives:
+                continue
+            representatives[key] = {
+                "task_id": str(row.get("task_id", "")),
+                "config_id": str(row.get("config_id", "")),
+                "task_run_id": str(row.get("task_run_id", "")),
+                "trace_path": str(row.get("trace_path", "")),
+            }
+
+    details: list[dict[str, object]] = []
+    for label, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):
+        details.append(
+            {
+                "label": label,
+                "count": count,
+                "representative": representatives.get(
+                    label,
+                    {
+                        "task_id": "",
+                        "config_id": "",
+                        "task_run_id": "",
+                        "trace_path": "",
+                    },
+                ),
+            }
+        )
+    return details
+
+
 @dataclass(slots=True)
 class BenchmarkReportBuilder:
     dataset_id: str
@@ -71,5 +112,6 @@ class BenchmarkReportBuilder:
             summary_table=rows,
             per_task_scores=_per_task_scores(rows),
             failure_clusters=_failure_clusters(rows),
+            failure_cluster_details=_failure_cluster_details(rows),
             best_config=best,
         )
