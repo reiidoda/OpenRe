@@ -59,7 +59,10 @@ def test_cli_compare_outputs_json(capsys, tmp_path: Path) -> None:
     assert first_row["config_id"] == "research_basic"
     assert first_row["task_id"] == "ra_001"
     assert first_row["status"] == "completed"
+    assert first_row["output_quality_score"] == 1.0
+    assert first_row["trace_quality_score"] == 1.0
     assert first_row["score"] == 1.0
+    assert first_row["failure_labels"] == []
     assert payload["summary"]["task_runs"] == 10
     assert payload["summary"]["completed"] == 10
     assert payload["summary"]["success_rate"] == 1.0

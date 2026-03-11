@@ -13,6 +13,8 @@ from agent_workbench.adapters.local.json_trace_sink import JsonTraceSink
 from agent_workbench.adapters.storage.filesystem_store import FilesystemStore
 from agent_workbench.adapters.storage.sqlite_store import SqliteStore
 from agent_workbench.domain.entities.trace import TraceEvent, TraceEventKind
+from agent_workbench.evals.graders.trace_grade import TraceGrader
+from agent_workbench.evals.metrics import weighted_score
 from agent_workbench.reporting.benchmark_report import BenchmarkReportBuilder
 from agent_workbench.reporting.csv_export import export as export_csv
 from agent_workbench.reporting.html_export import export as export_html
@@ -29,6 +31,7 @@ class Runner:
     report_schema_version: str = "openre.report.v1"
     filesystem_store: FilesystemStore | None = None
     sqlite_store: SqliteStore | None = None
+    trace_grader: TraceGrader = field(default_factory=TraceGrader)
 
     @staticmethod
     def _build_summary(rows: list[dict[str, object]], config_ids: list[str]) -> dict[str, Any]:
@@ -77,31 +80,61 @@ class Runner:
         for config in configs:
             for task in tasks:
                 task_run_id = make_id("taskrun")
-                trace_sink.write(
-                    TraceEvent(
-                        event_id=make_id("evt"),
-                        run_id=run_id,
-                        task_run_id=task_run_id,
-                        kind=TraceEventKind.PROMPT_SENT,
-                        payload={"config_id": config.config_id, "task_id": task.task_id},
+                event_kinds: list[str] = []
+
+                def emit(kind: TraceEventKind, payload: dict[str, str]) -> None:
+                    event_kinds.append(kind.value)
+                    trace_sink.write(
+                        TraceEvent(
+                            event_id=make_id("evt"),
+                            run_id=run_id,
+                            task_run_id=task_run_id,
+                            kind=kind,
+                            payload=payload,
+                        )
                     )
+
+                emit(
+                    TraceEventKind.PROMPT_SENT,
+                    {"config_id": config.config_id, "task_id": task.task_id},
                 )
-                trace_sink.write(
-                    TraceEvent(
-                        event_id=make_id("evt"),
-                        run_id=run_id,
-                        task_run_id=task_run_id,
-                        kind=TraceEventKind.COMPLETED,
-                        payload={"status": "ok"},
-                    )
+
+                emit(
+                    TraceEventKind.COMPLETED,
+                    {"status": "ok"},
                 )
+
+                trace_eval = self.trace_grader.evaluate(
+                    ",".join(event_kinds),
+                    {
+                        "trace_events": event_kinds,
+                        "trace": {
+                            "required_sequence": ["prompt_sent", "completed"],
+                            "requires_approval": False,
+                            "max_tool_calls": 2,
+                        },
+                    },
+                )
+                output_quality_score = 1.0
+                final_score = weighted_score(
+                    output_quality=output_quality_score,
+                    trace_quality=trace_eval.score,
+                )
+                failure_labels = [
+                    label.removeprefix("failure:")
+                    for label in trace_eval.labels
+                    if label.startswith("failure:")
+                ]
                 rows.append(
                     {
                         "task_id": task.task_id,
                         "config_id": config.config_id,
                         "status": "completed",
-                        "score": 1.0,
+                        "output_quality_score": output_quality_score,
+                        "trace_quality_score": round(trace_eval.score, 4),
+                        "score": round(final_score, 4),
                         "risk": task.risk_profile.value,
+                        "failure_labels": failure_labels,
                     }
                 )
 
