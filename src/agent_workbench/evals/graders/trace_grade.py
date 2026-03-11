@@ -49,9 +49,11 @@ class TraceGrader:
         trace_config = trace_config_raw if isinstance(trace_config_raw, dict) else {}
 
         required_raw = trace_config.get("required_sequence", ["prompt_sent", "completed"])
-        required_sequence = [
-            item for item in required_raw if isinstance(item, str) and item.strip()
-        ] if isinstance(required_raw, list) else ["prompt_sent", "completed"]
+        required_sequence = (
+            [item for item in required_raw if isinstance(item, str) and item.strip()]
+            if isinstance(required_raw, list)
+            else ["prompt_sent", "completed"]
+        )
         requires_approval = bool(trace_config.get("requires_approval", False))
         max_tool_calls_raw = trace_config.get("max_tool_calls", 2)
         max_tool_calls = int(max_tool_calls_raw) if isinstance(max_tool_calls_raw, int) else 2

@@ -21,9 +21,7 @@ def weighted_score(
     total_weight = output_component + trace_component
     if total_weight <= 0:
         return 0.0
-    score = (
-        output_quality * output_component + trace_quality * trace_component
-    ) / total_weight
+    score = (output_quality * output_component + trace_quality * trace_component) / total_weight
     if score < 0.0:
         return 0.0
     if score > 1.0:
