@@ -3,6 +3,9 @@ name: Eval Regression
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -10,6 +13,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+          cache: "pip"
       - run: pip install -e .[dev]
-      - run: awb compare --dataset datasets/research_assistant_v1 --configs configs/agents/research_basic.yaml configs/agents/research_multimodal.yaml
+      - name: Run configurable regression gate
+        run: |
+          python scripts/run_regression_gate.py \
+            --config configs/ci/regression_gate.yaml \
+            --artifact-root .artifacts \
+            --output .artifacts/regression/gate_report.json
+      - name: Upload regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-gate-artifacts
+          path: |
+            .artifacts/regression/gate_report.json
+            .artifacts/reports/**/v1/report.json
+            .artifacts/traces/**/trace.jsonl

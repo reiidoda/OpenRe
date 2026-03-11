@@ -1,0 +1,23 @@
+dataset: datasets/research_assistant_v1
+
+baseline:
+  id: research_basic
+  config_path: configs/agents/research_basic.yaml
+
+candidate:
+  id: research_multimodal
+  config_path: configs/agents/research_multimodal.yaml
+
+thresholds:
+  success_rate:
+    mode: max_drop
+    value: 0.0
+  avg_score:
+    mode: max_drop
+    value: 0.02
+  avg_latency_ms:
+    mode: max_increase
+    value: 0.0
+  avg_cost_usd:
+    mode: max_increase
+    value: 0.0
