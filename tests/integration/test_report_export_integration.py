@@ -26,7 +26,9 @@ def test_json_export_includes_run_metadata_and_rows(tmp_path: Path) -> None:
 
     run_id = str(result["run_id"])
     report_json = _artifact_path(result["artifacts"], "report.json")
+    report_html = _artifact_path(result["artifacts"], "report.html")
     payload = json.loads(report_json.read_text(encoding="utf-8"))
+    html = report_html.read_text(encoding="utf-8")
 
     assert payload["schema_version"] == "openre.report.v1"
     assert payload["run"]["run_id"] == run_id
@@ -42,6 +44,9 @@ def test_json_export_includes_run_metadata_and_rows(tmp_path: Path) -> None:
     assert payload["summary"]["avg_cost_usd"] == 0.0
     assert "ra_001" in payload["benchmark"]["per_task_scores"]
     assert payload["benchmark"]["failure_clusters"] == {}
+    assert payload["benchmark"]["failure_cluster_details"] == []
+    assert "<h2>Failure Clusters</h2>" in html
+    assert "No failure clusters detected." in html
 
     assert report_json.parent.name == "v1"
     assert report_json.parent.parent.name == run_id
