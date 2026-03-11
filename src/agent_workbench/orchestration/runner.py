@@ -10,6 +10,8 @@ from typing import Any
 from agent_workbench.adapters.local.config_loader import YamlAgentConfigLoader
 from agent_workbench.adapters.local.dataset_loader import JsonlDatasetProvider
 from agent_workbench.adapters.local.json_trace_sink import JsonTraceSink
+from agent_workbench.adapters.storage.filesystem_store import FilesystemStore
+from agent_workbench.adapters.storage.sqlite_store import SqliteStore
 from agent_workbench.domain.entities.trace import TraceEvent, TraceEventKind
 from agent_workbench.reporting.benchmark_report import BenchmarkReportBuilder
 from agent_workbench.reporting.csv_export import export as export_csv
@@ -25,6 +27,8 @@ class Runner:
     dataset_provider: JsonlDatasetProvider = field(default_factory=JsonlDatasetProvider)
     config_loader: YamlAgentConfigLoader = field(default_factory=YamlAgentConfigLoader)
     report_schema_version: str = "awb.report.v1"
+    filesystem_store: FilesystemStore | None = None
+    sqlite_store: SqliteStore | None = None
 
     @staticmethod
     def _build_summary(rows: list[dict[str, object]], config_ids: list[str]) -> dict[str, Any]:
@@ -63,8 +67,10 @@ class Runner:
         dataset_path = Path(dataset)
         tasks = self.dataset_provider.load_tasks(str(dataset_path))
         configs = [self.config_loader.load(config_path) for config_path in config_paths]
+        filesystem_store = self.filesystem_store or FilesystemStore(self.artifact_root)
+        sqlite_store = self.sqlite_store or SqliteStore(self.artifact_root / "state" / "runs.db")
 
-        trace_path = self.artifact_root / "traces" / f"{run_id}.jsonl"
+        trace_path = filesystem_store.run_trace_path(run_id)
         trace_sink = JsonTraceSink(trace_path)
         rows: list[dict[str, object]] = []
 
@@ -106,7 +112,6 @@ class Runner:
 
         config_ids = [config.config_id for config in configs]
         summary = self._build_summary(rows, config_ids)
-        outputs_dir = self.artifact_root / "reports" / run_id / "v1"
         run_metadata = {
             "run_id": run_id,
             "dataset_id": dataset_path.name,
@@ -123,17 +128,33 @@ class Runner:
             "benchmark": report,
         }
 
-        json_path = export_json(json_payload, outputs_dir / "report.json")
+        json_path = export_json(
+            json_payload,
+            filesystem_store.run_report_path(run_id, "v1/report.json"),
+        )
         csv_path = export_csv(
             rows,
-            outputs_dir / "summary.csv",
+            filesystem_store.run_report_path(run_id, "v1/summary.csv"),
             metadata={
                 "schema_version": self.report_schema_version,
                 "run_id": run_id,
                 "dataset_id": dataset_path.name,
             },
         )
-        html_path = export_html("Open Agent Workbench Benchmark", rows, outputs_dir / "report.html")
+        html_path = export_html(
+            "Open Agent Workbench Benchmark",
+            rows,
+            filesystem_store.run_report_path(run_id, "v1/report.html"),
+        )
+        sqlite_store.put_run_metadata(
+            run_id=run_id,
+            dataset_id=dataset_path.name,
+            status="completed",
+            task_runs=len(rows),
+            trace_path=str(trace_path.resolve()),
+            config_ids=config_ids,
+            artifacts=[json_path, csv_path, html_path],
+        )
 
         return {
             "run_id": run_id,
