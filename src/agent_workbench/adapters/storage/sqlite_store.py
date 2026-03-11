@@ -98,7 +98,9 @@ class SqliteStore:
             return None
         config_ids_raw = json.loads(str(row[5]))
         artifacts_raw = json.loads(str(row[6]))
-        config_ids = [str(item) for item in config_ids_raw] if isinstance(config_ids_raw, list) else []
+        config_ids = (
+            [str(item) for item in config_ids_raw] if isinstance(config_ids_raw, list) else []
+        )
         artifacts = [str(item) for item in artifacts_raw] if isinstance(artifacts_raw, list) else []
         return {
             "run_id": str(row[0]),
