@@ -137,19 +137,24 @@ def test_cli_optimize_outputs_json(capsys) -> None:
             "--dataset",
             "datasets/research_assistant_v1",
             "--search-space",
-            "configs/agents/research_basic.yaml",
+            "configs/search/dev_test_loop.yaml",
         ]
     )
     assert code == 0
 
     payload = _parse_stdout_json(capsys.readouterr().out)
-    assert payload == {
-        "command": "optimize",
-        "dataset": "datasets/research_assistant_v1",
-        "message": "Optimizer pipeline scaffolded",
-        "search_space": "configs/agents/research_basic.yaml",
-        "status": "planned",
-    }
+    assert payload["command"] == "optimize"
+    assert payload["dataset"] == "datasets/research_assistant_v1"
+    assert payload["search_space"] == "configs/search/dev_test_loop.yaml"
+    assert payload["selected_candidate_id"] == "candidate_a"
+    assert payload["promoted"] is True
+    assert payload["promotion_reason"] == "Candidate promoted."
+    assert payload["dev_run"]["run_id"].startswith("optdev_")
+    assert payload["test_run"]["run_id"].startswith("opttest_")
+    assert payload["dev_run"]["task_ids"] == ["ra_004"]
+    assert payload["test_run"]["task_ids"] == ["ra_005"]
+    assert payload["dev_run"]["ranking"][0] == "candidate_a"
+    assert payload["test_run"]["ranking"] == ["candidate_a"]
 
 
 def test_cli_approve_outputs_json(capsys) -> None:

@@ -1,0 +1,40 @@
+ranker:
+  weights:
+    task_quality: 0.50
+    trace_quality: 0.20
+    safety_compliance: 0.10
+    latency_score: 0.10
+    cost_efficiency: 0.10
+  normalize_weights: true
+
+promotion:
+  min_test_score: 0.75
+  max_dev_test_drop: 0.10
+
+candidates:
+  - candidate_id: candidate_a
+    dev_metrics:
+      task_quality: 0.88
+      trace_quality: 0.70
+      safety_compliance: 0.95
+      latency_score: 0.70
+      cost_efficiency: 0.70
+    test_metrics:
+      task_quality: 0.85
+      trace_quality: 0.68
+      safety_compliance: 0.95
+      latency_score: 0.68
+      cost_efficiency: 0.68
+  - candidate_id: candidate_b
+    dev_metrics:
+      task_quality: 0.80
+      trace_quality: 0.72
+      safety_compliance: 0.95
+      latency_score: 0.72
+      cost_efficiency: 0.72
+    test_metrics:
+      task_quality: 0.76
+      trace_quality: 0.70
+      safety_compliance: 0.93
+      latency_score: 0.70
+      cost_efficiency: 0.70

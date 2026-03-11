@@ -7,9 +7,14 @@ import json
 from pathlib import Path
 import sys
 from typing import Any
+from typing import Mapping
 from typing import Sequence
 from typing import TextIO
 
+import yaml
+
+from agent_workbench.optimizer.config_search import WeightedObjectiveRanker
+from agent_workbench.optimizer.dev_test_loop import DevTestOptimizationLoop
 from agent_workbench.orchestration.runner import Runner
 
 
@@ -59,6 +64,62 @@ def _planned(command: str, **fields: Any) -> dict[str, Any]:
     return {"command": command, "status": "planned", **fields}
 
 
+def _coerce_float(value: object) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return 0.0
+    return 0.0
+
+
+def _as_mapping(value: object, field_name: str) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{field_name} must be a mapping.")
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        if isinstance(key, str):
+            result[key] = item
+    return result
+
+
+def _load_search_space(path: Path) -> dict[str, object]:
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return _as_mapping(loaded, str(path))
+
+
+def _load_candidates(search_space: dict[str, object]) -> list[dict[str, object]]:
+    raw_candidates = search_space.get("candidates")
+    if not isinstance(raw_candidates, list):
+        raise ValueError("search-space file must include a 'candidates' list.")
+    candidates: list[dict[str, object]] = []
+    for index, raw in enumerate(raw_candidates):
+        if not isinstance(raw, dict):
+            raise ValueError(f"candidates[{index}] must be a mapping.")
+        candidates.append(dict(raw))
+    if not candidates:
+        raise ValueError("search-space file must include at least one candidate.")
+    return candidates
+
+
+def _metrics_for_split(
+    *,
+    candidate: dict[str, object],
+    split: str,
+    objective_metrics: list[str],
+) -> dict[str, float]:
+    split_key = f"{split}_metrics"
+    split_metrics_raw = candidate.get(split_key)
+    split_metrics = split_metrics_raw if isinstance(split_metrics_raw, dict) else {}
+    source: Mapping[str, object] = split_metrics if split_metrics else candidate
+    metrics: dict[str, float] = {}
+    for metric in objective_metrics:
+        metrics[metric] = _coerce_float(source.get(metric))
+    return metrics
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     runner = Runner(artifact_root=Path(args.artifact_root))
@@ -93,13 +154,54 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
 
         if args.command == "optimize":
+            search_space_path = Path(args.search_space)
+            search_space = _load_search_space(search_space_path)
+            candidates = _load_candidates(search_space)
+
+            ranker_config_raw = search_space.get("ranker")
+            ranker_config = ranker_config_raw if isinstance(ranker_config_raw, dict) else {}
+            ranker = WeightedObjectiveRanker.from_config(ranker_config)
+            objective_metrics = sorted(ranker.resolved_weights().keys())
+
+            promotion_raw = search_space.get("promotion")
+            promotion = promotion_raw if isinstance(promotion_raw, dict) else {}
+            loop = DevTestOptimizationLoop(
+                ranker=ranker,
+                min_test_score=_coerce_float(promotion.get("min_test_score", 0.0)),
+                max_dev_test_drop=_coerce_float(promotion.get("max_dev_test_drop", 0.10)),
+            )
+            result = loop.run(
+                dataset_path=args.dataset,
+                candidates=candidates,
+                evaluate_candidate=lambda candidate, _tasks, split: _metrics_for_split(
+                    candidate=candidate,
+                    split=split,
+                    objective_metrics=objective_metrics,
+                ),
+            )
             _emit(
-                _planned(
-                    "optimize",
-                    dataset=args.dataset,
-                    search_space=args.search_space,
-                    message="Optimizer pipeline scaffolded",
-                )
+                {
+                    "command": "optimize",
+                    "dataset": args.dataset,
+                    "search_space": args.search_space,
+                    "selected_candidate_id": result.selected_candidate_id,
+                    "promoted": result.promoted,
+                    "promotion_reason": result.promotion_reason,
+                    "dev_run": {
+                        "run_id": result.dev.run_id,
+                        "task_ids": result.dev.task_ids,
+                        "ranking": result.dev.ranking,
+                        "candidate_scores": result.dev.candidate_scores,
+                        "selected_candidate_id": result.dev.selected_candidate_id,
+                    },
+                    "test_run": {
+                        "run_id": result.test.run_id,
+                        "task_ids": result.test.task_ids,
+                        "ranking": result.test.ranking,
+                        "candidate_scores": result.test.candidate_scores,
+                        "selected_candidate_id": result.test.selected_candidate_id,
+                    },
+                }
             )
             return 0
 
