@@ -18,6 +18,6 @@ class ExactMatchGrader:
             evaluator_name=self.name,
             metric_name="exact_match",
             score=score,
-            rationale="Exact text comparison.",
-            labels=[],
+            rationale="Deterministic exact text comparison against expected.target.",
+            labels=["exact_match:pass"] if score == 1.0 else ["exact_match:fail"],
         )
