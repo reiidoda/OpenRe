@@ -1,58 +1,76 @@
 # High-Level Design
 
 ## Purpose
-Define the enterprise blueprint for OpenRe as a benchmark-first, safety-first, and trace-first platform.
+Define the target architecture for OpenRe as the default framework for testing AI agents.
 
 ## System goals
-- Compare multiple agent configurations on identical tasks.
-- Preserve full observability and audit trails.
-- Enforce approval and policy gates for risky actions.
-- Scale from local single-node development to distributed execution.
+- Execute repeatable benchmark suites across multiple agent configurations.
+- Capture complete trace evidence for every run.
+- Evaluate outcomes with deterministic + semantic + safety-oriented graders.
+- Enforce risk-aware safety gates and approval workflows.
+- Produce machine-readable and human-readable benchmark artifacts.
 
-## Functional boundaries
-- Benchmark orchestration and run lifecycle management.
-- Adapter-based model/tool execution.
-- Evaluation and regression gating.
-- Reporting and artifact exports.
-- Governance, safety, and approvals.
+## Product interfaces
+- CLI
+- Python SDK
+- REST API
+- optional gRPC contract
+- Web dashboard
+- CI integrations
+- plugin system
 
-## Quality attributes (NFRs)
-- Reliability: deterministic retry + failure classification.
-- Scalability: horizontal run workers and decoupled event transport.
-- Security: zero-trust API boundaries, scoped access tokens, audit logs.
-- Maintainability: hexagonal boundaries and test contracts.
-- Observability: every run emits structured events with causality fields.
-
-## System context diagram
+## High-level architecture
 
 ```mermaid
-flowchart LR
-  User["Engineer / Researcher"] --> API["OpenRe CLI/API Gateway"]
-  Approver["Human Approver"] --> Approval["Approval Service"]
+flowchart TB
+  UI["CLI | SDK | API | Dashboard | CI"] --> CP["Control Plane"]
 
-  API --> Orchestrator["Run Orchestrator"]
-  Orchestrator --> Agents["Model Adapters"]
-  Orchestrator --> Tools["Tool Adapters"]
-  Orchestrator --> Eval["Evaluation Harness"]
-  Orchestrator --> Reports["Reporting Service"]
-  Orchestrator --> Safety["Policy Engine"]
+  CP --> RM["Run Manager"]
+  CP --> BM["Benchmark Manager"]
+  CP --> PM["Policy/Approval Manager"]
+  CP --> CM["Config Registry"]
+  CP --> RPM["Report Manager"]
 
-  Safety --> Approval
-  Orchestrator --> Events["Event Bus / Trace Stream"]
-  Events --> TraceDB["Trace Store"]
-  Events --> Metrics["Metrics Store"]
+  CP --> CORE["Execution + Evaluation Core"]
+  CORE --> ORCH["Orchestrator"]
+  CORE --> ADP["Agent Adapter Layer"]
+  CORE --> TB["Trace Bus"]
+  CORE --> EVAL["Evaluation Engine"]
+  CORE --> MET["Metrics Engine"]
+  CORE --> OPT["Optimization Engine"]
 
-  Agents --> OpenAI["OpenAI Responses / Agents SDK"]
-  Tools --> Browser["Browser / Computer Harness"]
-  Reports --> Artifacts["Artifact Store (FS/Object)"]
+  ADP --> RUNTIME["LLM/Tool/Browser/Multi-agent Runtimes"]
+
+  TB --> STORE["Storage Layer"]
+  STORE --> PG["PostgreSQL"]
+  STORE --> REDIS["Redis"]
+  STORE --> OBJ["Object Storage"]
+  STORE --> TRACE["Trace Store"]
+
+  RUNTIME --> EXT["External Providers/APIs/Automation"]
 ```
 
-## Enterprise operating model
-- Control plane: orchestration, config, policies, approval routing.
-- Data plane: task execution, tool invocation, model responses.
-- Insight plane: traces, metrics, eval scores, benchmark dashboards.
+## Operating planes
+- Control plane: orchestration, policies, approvals, report lifecycle.
+- Data plane: task execution, adapter invocation, tool actions.
+- Insight plane: traces, metrics, evaluations, leaderboards.
 
-## Source-informed principles
-- Reliability/scalability/maintainability triad (DDIA).
-- Architecture fitness and coupling tradeoffs (Fundamentals of Software Architecture).
-- API-first consistency and secure defaults (API Design Patterns, API Security in Action).
+## Quality attributes
+- Reproducibility: config fingerprints + git SHA + evaluator versioning.
+- Reliability: idempotent writes, retry policy, failure isolation.
+- Scalability: local, single-node, distributed workers.
+- Security: RBAC, approvals, audit logs, sandboxing.
+- Extensibility: plugin-based adapters/evaluators/exporters.
+- Observability: event stream with correlation metadata.
+
+## Architectural style
+- Hexagonal boundaries for domain isolation.
+- Event-driven internals for traceability and replay.
+- CQRS-lite split: command-oriented run/approval writes + query-oriented report/trace reads.
+
+## Deployment modes
+- Local developer mode.
+- Team server mode.
+- Cloud/distributed mode.
+
+See [32_openre_default_framework_spec.md](32_openre_default_framework_spec.md) for complete product-level detail.

@@ -1,51 +1,68 @@
-# AI / ML / Deep Learning / NLP / Neuroscience / Data Science Strategy
+# AI / ML / DL / NLP / Neuroscience / Data Science Strategy
 
-## AI/ML scope in OpenRe
-- Benchmark and compare agent configurations.
-- Evaluate quality, safety, latency, and cost tradeoffs.
-- Enable controlled optimization of prompts, tools, and routing.
+## Scope in OpenRe
+OpenRe is not a base-model training platform. It is an AI engineering platform to evaluate and improve agent behavior with reproducible evidence.
 
-## ML system lifecycle
+## Improvement loop
 
 ```mermaid
 flowchart LR
-  Data["Dataset + Labels"] --> Train["Train / Fine-tune"]
-  Train --> Eval["Offline Eval + Trace Grade"]
-  Eval --> Registry["Best Config Registry"]
-  Registry --> Deploy["Canary Deployment"]
-  Deploy --> Observe["Production Metrics + Traces"]
-  Observe --> Improve["Prompt/Tool/Policy Optimization"]
-  Improve --> Data
+  SPEC["Task and benchmark spec"] --> RUN["Run agents"]
+  RUN --> TRACE["Collect traces/events"]
+  TRACE --> EVAL["Evaluate quality/safety/cost/latency"]
+  EVAL --> ANALYZE["Analyze failures and regressions"]
+  ANALYZE --> OPT["Optimize prompts/tools/configs"]
+  OPT --> SPEC
 ```
 
-## Deep learning and NLP focus
-- Retrieval-grounded summarization and synthesis.
-- Structured generation with schema-constrained outputs.
-- Tool-use planning and step-level trace interpretation.
-- Multimodal expansion for image and browser/computer tasks.
+## Evaluation model
 
-## Reinforcement learning perspective
-- Treat optimizer loop as constrained policy improvement.
-- Reward combines quality, safety, latency, and cost.
-- Prevent reward hacking with trace and safety penalties.
+Total score:
+- `Score_total = w1*Q + w2*C + w3*L + w4*S + w5*T`
 
-## Neuroscience-inspired considerations
-- Credit assignment across multi-step decision traces.
-- Representation learning via task embeddings and failure clusters.
-- Exploration/exploitation tradeoffs in config search.
+Where:
+- `Q` quality
+- `C` correctness
+- `L` latency efficiency
+- `S` safety compliance
+- `T` tool-use quality
+
+Regression delta:
+- `Delta = Score_current - Score_baseline`
+
+Safety-adjusted score:
+- `SafetyAdjustedScore = Score_total - lambda*V`
+
+Confidence-aware judge blending:
+- `FinalJudgeScore = alpha*JudgeScore + (1-alpha)*DeterministicScore`
 
 ## Data science workstreams
-- Failure cluster analysis and causal diagnostics.
-- Drift detection across datasets, prompts, and tool schemas.
-- Cohort analysis by modality, risk class, and domain.
+- failure clustering
+- drift detection by dataset/config/modality
+- evaluator calibration and agreement analysis
+- cost/latency frontier analysis
+- run lineage and reproducibility diagnostics
 
-## Metrics
-- Model quality metrics (task score, citation quality, hallucination rate).
-- System metrics (throughput, latency, cost per successful run).
-- Safety metrics (violation rate, approval rate, high-risk block precision).
+## NLP/DL focus areas
+- grounded summarization and citation quality
+- schema-constrained structured generation
+- tool-use trajectory quality
+- multimodal reasoning validation
 
-## Source-informed rationale
-- ML lifecycle and production constraints (Designing Machine Learning Systems).
-- Mathematical foundations for optimization and generalization (Mathematics for Machine Learning).
-- RL objective framing and policy improvement (Sutton & Barto).
-- Neural coding/learning inspirations for representation and adaptation (Theoretical Neuroscience).
+## RL/optimization framing
+Objective function:
+- `J(theta) = beta1*Q(theta) - beta2*Cost(theta) - beta3*Latency(theta) - beta4*Risk(theta)`
+
+Use both:
+- weighted scalar ranking for practical defaults
+- Pareto frontier for multi-objective decision support
+
+## Neuroscience-inspired ideas (research track)
+- multi-step credit assignment over traces
+- working-memory and episodic-memory strategy experiments
+- behavior signature clustering for policy adaptation
+
+## Deliverables by maturity stage
+- baseline: deterministic evaluators + weighted scoring
+- growth: confidence-aware judging + failure clustering
+- advanced: active benchmark selection + anomaly detection

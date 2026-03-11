@@ -21,7 +21,7 @@ def _emit(payload: dict[str, Any], *, stream: TextIO | None = None) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="awb", description="Open Agent Workbench CLI")
+    parser = argparse.ArgumentParser(prog="openre", description="OpenRe CLI")
     parser.add_argument(
         "--artifact-root",
         default=".artifacts",

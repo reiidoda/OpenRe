@@ -26,7 +26,7 @@ class Runner:
     artifact_root: Path = Path(".artifacts")
     dataset_provider: JsonlDatasetProvider = field(default_factory=JsonlDatasetProvider)
     config_loader: YamlAgentConfigLoader = field(default_factory=YamlAgentConfigLoader)
-    report_schema_version: str = "awb.report.v1"
+    report_schema_version: str = "openre.report.v1"
     filesystem_store: FilesystemStore | None = None
     sqlite_store: SqliteStore | None = None
 

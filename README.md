@@ -1,4 +1,4 @@
-# OpenRe: Open-Source AI Agent Evaluation and Safety Workbench
+# OpenRe: The Default Framework for Testing AI Agents
 
 ![OpenRe banner](assets/readme/openre-banner.svg)
 
@@ -9,116 +9,131 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-black)](pyproject.toml)
 [![Stars](https://img.shields.io/github/stars/reiidoda/OpenRe?style=social)](https://github.com/reiidoda/OpenRe/stargazers)
 
-OpenRe is a benchmark-first, trace-first, and safety-first platform for building reliable AI agent systems.
+OpenRe is a benchmark-first, trace-first, safety-first framework for testing, evaluating, debugging, and validating AI agents.
 
-It helps teams benchmark agent configurations, run repeatable evaluations, inspect trace-level behavior, enforce approval gates, and optimize quality/cost/latency with evidence.
+## Positioning
 
-## Why this project matters
+OpenRe is to AI agents what `pytest` is to Python testing:
+- define repeatable agent tests
+- run them locally or in CI
+- inspect traces and failures
+- compare configurations across versions
+- enforce safety gates for risky actions
 
-Most AI-agent projects are demo-driven. OpenRe is engineering-driven:
-- measurable behavior through dataset-based benchmarks
-- testable changes through eval and regression workflows
-- auditable execution through structured traces and immutable logs
-- safer operations through policy and human approval gates
+OpenRe improves how AI systems are engineered and deployed. It is not a base-model invention project.
 
-OpenRe improves how AI is built and deployed. It is not a base-model breakthrough project.
+## Core value
 
-## Keywords
+OpenRe helps teams answer, with evidence:
+- does the agent still work after model/prompt/tool changes?
+- what failed, where, and why?
+- which config is best for quality, cost, latency, and safety?
+- can risky actions be blocked or approval-gated?
+- can runs be reproduced, audited, and compared over time?
 
-AI agents, agent evaluation, LLM evaluation, agent benchmarking, agent observability, AI safety, multimodal agents, trace analysis, prompt optimization, tool-use testing, regression testing for agents.
+## Product surfaces
 
-## What you can do with OpenRe
+OpenRe roadmap targets these interfaces as first-class surfaces:
+- CLI (`openre` and `awb` aliases)
+- Python SDK
+- REST API and optional gRPC contract
+- Web dashboard (trace viewer, approval queue, leaderboard)
+- CI/CD integration
+- plugin system for adapters/evaluators/exporters
 
-- Compare two or more agent configs on the same task set.
-- Capture structured traces for every run and tool step.
-- Grade output quality and trace quality.
-- Block risky actions until explicit approval.
-- Export benchmark artifacts as JSON, CSV, and HTML.
+## Core commands
 
-## Architecture overview
+```bash
+openre init
+openre test --benchmark benchmarks/research.yaml --config configs/agents/research_basic.yaml
+openre run --dataset datasets/research_assistant_v1 --config configs/agents/research_basic.yaml
+openre compare --dataset datasets/research_assistant_v1 --configs configs/agents/research_basic.yaml configs/agents/research_multimodal.yaml
+openre trace run_123
+openre eval --run-id run_123
+openre approve --request-id apr_123 --decision approve
+openre report --run-id run_123 --format html
+openre leaderboard
+```
+
+## Architecture snapshot
 
 ```mermaid
 flowchart LR
-  U["User / CI"] --> CLI["CLI/API"]
-  CLI --> O["Orchestration Runner"]
-  O --> A["Agent Adapter"]
-  O --> S["Safety Policy Engine"]
-  O --> T["Trace Event Bus"]
-  A --> M["Model + Tools"]
-  T --> E["Evals + Metrics"]
-  E --> R["Reports"]
+  UI["CLI | SDK | API | Dashboard | CI"] --> CP["Control Plane"]
+  CP --> CORE["Execution + Evaluation Core"]
+  CORE --> AR["Agent Adapter Layer"]
+  CORE --> TR["Trace Bus"]
+  CORE --> EV["Evaluation + Metrics"]
+  CORE --> SA["Safety + Approvals"]
+  EV --> RP["Reporting + Leaderboards"]
+  AR --> EXT["LLM/Tool/Browser Providers"]
+  TR --> ST["Storage: Postgres/Redis/Object/Trace"]
 ```
-
-Deep architecture docs: [Documentation Hub](docs/README.md)
 
 ## Quickstart
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/reiidoda/OpenRe.git
 cd OpenRe
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
-awb run --dataset datasets/research_assistant_v1 --config configs/agents/research_basic.yaml
+openre run --dataset datasets/research_assistant_v1 --config configs/agents/research_basic.yaml
 ```
 
-## Example commands
+Notes:
+- `openre` is the canonical command name.
+- `awb` remains available as a compatibility alias.
 
-```bash
-awb run --dataset datasets/research_assistant_v1 --config configs/agents/research_basic.yaml
-awb compare --dataset datasets/research_assistant_v1 --configs configs/agents/research_basic.yaml configs/agents/research_multimodal.yaml
-awb eval --run-id run_001
-awb optimize --dataset datasets/research_assistant_v1 --search-space configs/agents/research_basic.yaml
-awb approve --request-id apr_001 --decision approve
-awb report --run-id run_001 --format html
-```
+## Five benchmark packs (target)
 
-## Contribute now
+- Pack A: Research Agent Benchmark
+- Pack B: Tool Use Benchmark
+- Pack C: Browser Agent Benchmark
+- Pack D: Multimodal Benchmark
+- Pack E: Enterprise Workflow Benchmark
 
-We are actively building core features. Contributions are welcome across engineering, eval design, safety, docs, and architecture.
+## Safety model
 
-- Good first issues: [good first issue](https://github.com/reiidoda/OpenRe/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-- Help wanted: [help wanted](https://github.com/reiidoda/OpenRe/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
-- Milestone backlog: [milestones](https://github.com/reiidoda/OpenRe/milestones)
-- Contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+Risk classes:
+- low
+- medium
+- high
+- critical
 
-### Contribution lanes
-
-- Agent adapters and tool contracts
-- Dataset and rubric design
-- Evaluation and regression logic
-- Safety policy and approval workflows
-- Reporting, DX, and docs quality
-
-## Roadmap and milestones
-
-- Roadmap: [ROADMAP.md](ROADMAP.md)
-- Milestones: [MILESTONES.md](MILESTONES.md)
-- Project workflow: [PROJECTS.md](PROJECTS.md)
+Typical approval-required actions:
+- browser form submission
+- external API writes
+- shell execution
+- filesystem delete
+- financial or production-impact operations
 
 ## Documentation
 
-- Vision and PRD: [docs/01_vision_and_scope.md](docs/01_vision_and_scope.md), [docs/02_prd.md](docs/02_prd.md)
-- Architecture and design: [docs/20_architecture_and_project_structure.md](docs/20_architecture_and_project_structure.md)
-- Database and distributed systems: [docs/21_database_strategy_and_distributed_data_design.md](docs/21_database_strategy_and_distributed_data_design.md)
-- API/security: [docs/22_api_design_and_security.md](docs/22_api_design_and_security.md)
-- Scalability/performance: [docs/23_scalability_performance_cost_and_event_driven_architecture.md](docs/23_scalability_performance_cost_and_event_driven_architecture.md)
-- Testing/quality/SCM: [docs/24_testing_quality_metrics_and_scm.md](docs/24_testing_quality_metrics_and_scm.md)
-- AI/ML strategy: [docs/27_ai_ml_dl_nlp_neuroscience_data_science.md](docs/27_ai_ml_dl_nlp_neuroscience_data_science.md)
-- SEO/discoverability: [docs/29_seo_and_discoverability.md](docs/29_seo_and_discoverability.md)
+Start here: [docs/README.md](docs/README.md)
 
-## FAQ
+Canonical product spec: [docs/32_openre_default_framework_spec.md](docs/32_openre_default_framework_spec.md)
 
-### Is OpenRe an AI model?
-No. OpenRe is an engineering workbench to evaluate and govern AI agent systems.
+Recommended core docs:
+- Vision and scope: [docs/01_vision_and_scope.md](docs/01_vision_and_scope.md)
+- High-level design: [docs/18_high_level_design.md](docs/18_high_level_design.md)
+- Low-level design: [docs/19_low_level_design.md](docs/19_low_level_design.md)
+- Architecture/project structure: [docs/20_architecture_and_project_structure.md](docs/20_architecture_and_project_structure.md)
+- Roadmap: [ROADMAP.md](ROADMAP.md)
+- Milestones: [MILESTONES.md](MILESTONES.md)
 
-### Does OpenRe support safety approvals?
-Yes. Policy and approval flows are first-class architecture components.
+## Contribution lanes
 
-### Can OpenRe help reduce regressions?
-Yes. It is built around evals, benchmark comparisons, and regression gates.
+- Adapter ecosystem (OpenAI/LangChain/CrewAI/AutoGen/custom)
+- Evaluators and benchmark packs
+- Safety and policy engine
+- Orchestration and distributed execution
+- Reports/dashboard/UX
+- Docs/examples/CI templates
 
-## Community standards
+See [CONTRIBUTING.md](CONTRIBUTING.md), [PROJECTS.md](PROJECTS.md), and [MILESTONES.md](MILESTONES.md).
+
+## Community and governance
 
 - Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Security policy: [SECURITY.md](SECURITY.md)

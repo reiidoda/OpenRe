@@ -28,7 +28,7 @@ def test_json_export_includes_run_metadata_and_rows(tmp_path: Path) -> None:
     report_json = _artifact_path(result["artifacts"], "report.json")
     payload = json.loads(report_json.read_text(encoding="utf-8"))
 
-    assert payload["schema_version"] == "awb.report.v1"
+    assert payload["schema_version"] == "openre.report.v1"
     assert payload["run"]["run_id"] == run_id
     assert payload["run"]["dataset_id"] == "research_assistant_v1"
     assert payload["run"]["config_ids"] == ["research_basic", "research_multimodal"]
@@ -60,7 +60,7 @@ def test_csv_export_is_flattened_and_includes_run_columns(tmp_path: Path) -> Non
 
     assert len(rows) == 10
     first = rows[0]
-    assert first["schema_version"] == "awb.report.v1"
+    assert first["schema_version"] == "openre.report.v1"
     assert first["run_id"] == run_id
     assert first["dataset_id"] == "research_assistant_v1"
     assert first["task_id"] == "ra_001"
