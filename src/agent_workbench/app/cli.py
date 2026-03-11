@@ -115,7 +115,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
 
         if args.command == "report":
-            run_dir = Path(args.artifact_root) / "reports" / args.run_id
+            run_dir = Path(args.artifact_root) / "reports" / args.run_id / "v1"
             _emit(
                 {
                     "command": "report",
