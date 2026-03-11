@@ -53,6 +53,57 @@ def test_cli_compare_outputs_json(capsys, tmp_path: Path) -> None:
     assert payload["command"] == "compare"
     assert payload["rows"] == 10
     assert payload["configs"] == ["research_basic", "research_multimodal"]
+    assert isinstance(payload["result_table"], list)
+    assert len(payload["result_table"]) == 10
+    first_row = payload["result_table"][0]
+    assert first_row["config_id"] == "research_basic"
+    assert first_row["task_id"] == "ra_001"
+    assert first_row["status"] == "completed"
+    assert first_row["score"] == 1.0
+    assert payload["summary"]["task_runs"] == 10
+    assert payload["summary"]["completed"] == 10
+    assert payload["summary"]["success_rate"] == 1.0
+    assert payload["summary"]["estimated_total_cost_usd"] == 0.0
+    assert payload["summary"]["cost_is_placeholder"] is True
+    assert payload["summary"]["config_summaries"] == [
+        {
+            "config_id": "research_basic",
+            "task_runs": 5,
+            "completed": 5,
+            "success_rate": 1.0,
+            "estimated_cost_usd": 0.0,
+            "cost_is_placeholder": True,
+        },
+        {
+            "config_id": "research_multimodal",
+            "task_runs": 5,
+            "completed": 5,
+            "success_rate": 1.0,
+            "estimated_cost_usd": 0.0,
+            "cost_is_placeholder": True,
+        },
+    ]
+
+
+def test_cli_compare_requires_at_least_two_configs(capsys, tmp_path: Path) -> None:
+    code = main(
+        [
+            "--artifact-root",
+            str(tmp_path / "artifacts"),
+            "compare",
+            "--dataset",
+            "datasets/research_assistant_v1",
+            "--configs",
+            "configs/agents/research_basic.yaml",
+        ]
+    )
+    assert code == 1
+
+    payload = _parse_stdout_json(capsys.readouterr().err)
+    assert payload["command"] == "compare"
+    assert payload["status"] == "error"
+    assert payload["error"]["type"] == "ValueError"
+    assert "at least 2 config paths" in payload["error"]["message"]
 
 
 def test_cli_eval_outputs_json(capsys) -> None:
