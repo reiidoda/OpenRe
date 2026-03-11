@@ -1,0 +1,7 @@
+weights:
+  task_quality: 0.50
+  trace_quality: 0.20
+  safety_compliance: 0.10
+  latency_score: 0.10
+  cost_efficiency: 0.10
+normalize_weights: true
