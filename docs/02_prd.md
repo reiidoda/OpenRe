@@ -1,44 +1,55 @@
 # Product Requirements Document
 
 ## Product goal
-Establish OpenRe as an eval-first, trace-first, safety-first workbench that improves the quality and trustworthiness of agent systems over time.
+Make OpenRe the default framework for testing AI agents.
 
-## Product value thesis
-- OpenRe improves AI engineering outcomes by making behavior measurable and comparable.
-- OpenRe improves AI safety by adding policy and approval controls before risky execution.
-- OpenRe improves organizational learning by turning traces and failures into reusable evidence.
+## Product statement
+OpenRe provides benchmark execution, trace inspection, evaluation, regression gating, safety approvals, and reporting for AI-agent systems with engineering-grade repeatability.
 
 ## Personas
-- Agent engineer
-- Evaluator/researcher
-- Platform engineer
-- OSS contributor
+- AI Engineer
+- Research Engineer
+- Product Team
+- Safety/Compliance Reviewer
+- OSS Contributor
 
 ## Functional requirements
-- Load dataset tasks and agent configs.
-- Execute tasks and collect traces.
-- Grade outputs and traces.
-- Export benchmark artifacts.
-- Enforce policy and approval controls.
-- Compare results across model/prompt/tool variants.
-- Preserve immutable audit logs for approvals and denials.
-- Support optimization loops driven by benchmark results.
+- define and version task specs, rubrics, and datasets
+- register and version agent configurations
+- execute tasks across config matrices
+- capture full step-level traces and tool events
+- evaluate outputs with deterministic and model-based evaluators
+- calculate weighted scores and regression deltas
+- compare baseline vs candidate runs
+- block or approval-gate risky actions
+- persist immutable audit logs
+- export JSON/CSV/HTML artifacts
+- provide leaderboard and run diff views
+- support CLI, SDK, API, dashboard, and CI integration
+- support plugin extensions for adapters/evaluators/exporters
 
 ## Non-functional requirements
-- Reproducibility
-- Extensibility
-- Observability
-- Safety and auditability
-- Reliability under partial failures
-- Cost visibility and optimization support
+- reproducibility and provenance
+- reliability and idempotency
+- scalability from local to distributed workers
+- security and policy enforcement
+- observability with trace lineage
+- extensibility via stable contracts
 
-## Core development loop
-1. Specify expected behavior with datasets and rubrics.
-2. Run benchmark and capture traces.
-3. Analyze regressions/failure clusters/safety incidents.
-4. Improve prompts/tools/configuration/policies.
-5. Re-run and verify improvements.
+## Product constraints
+- OpenRe is a framework/platform, not a consumer chatbot.
+- OpenRe does not claim base-model breakthroughs.
+- Safety must be enforced by architecture, not convention.
 
-## Product impact boundaries
-- In scope impact: better engineering quality, safety posture, and deployment confidence for AI systems.
-- Out of scope impact: direct breakthroughs in base model architecture intelligence.
+## Success criteria
+- first benchmark run in under five minutes
+- run outputs include trace + score + report artifacts
+- regression gates can fail CI automatically
+- risky actions can be blocked/approval-gated
+- benchmark results are reproducible and inspectable
+
+## Release readiness criteria
+- core interfaces documented and versioned
+- benchmark packs published with baseline results
+- migration notes and compatibility policy in place
+- contributor onboarding and plugin docs complete

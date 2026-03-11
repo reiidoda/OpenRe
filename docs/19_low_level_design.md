@@ -1,65 +1,117 @@
 # Low-Level Design
 
-## Runtime decomposition
-- `Runner`: coordinates dataset/config execution.
-- `DatasetLoader` and `ConfigLoader`: strict schema validation.
-- `ResponsesAdapter`: model invocation contract.
-- `JsonTraceSink`: append-only NDJSON event persistence.
-- `EvalHarness`: output and trace scoring.
+## Purpose
+Define implementation-level components, contracts, and state models for OpenRe runtime execution.
 
-## Core request flow
+## Runtime decomposition
+- `TaskService`: parse/validate/resolve task specs and datasets.
+- `AgentConfigService`: register/fingerprint/diff agent configs.
+- `OrchestrationService` (`Runner`): coordinates run lifecycle.
+- `SafetyService`: risk assessment, policy decisions, approval requests.
+- `EvaluationService`: evaluator pipelines and aggregation.
+- `ReportService`: summary build + JSON/CSV/HTML export.
+- `TraceBus`: append-only event capture and sink dispatch.
+
+## Core entities
+- `TaskSpec`
+- `AgentConfig`
+- `RunSession`
+- `TaskRun`
+- `TraceEvent`
+- `EvaluationResult`
+- `ApprovalRequest`
+- `BenchmarkReport`
+
+## Repository interfaces
+- `TaskRepository`
+- `RunRepository`
+- `TraceRepository`
+- `EvalRepository`
+- `ApprovalRepository`
+- `ReportRepository`
+
+Pattern guidance:
+- Repository + Unit of Work
+
+## Adapter contract
+
+Standard adapter API:
+- `initialize(config)`
+- `run(task_context)`
+- `stream_events()`
+- `get_result()`
+- `cancel()`
+- `cleanup()`
+
+## Execution flow (sequence)
 
 ```mermaid
 sequenceDiagram
-  participant CLI as CLI
-  participant Runner as Runner
-  participant DL as DatasetLoader
-  participant CL as ConfigLoader
-  participant Adapter as ResponsesAdapter
-  participant Safety as PolicyEngine
-  participant Sink as TraceSink
-  participant Eval as EvalHarness
+  participant CLI
+  participant Orch as Orchestrator
+  participant Task
+  participant Config
+  participant Safety
+  participant Adapter
+  participant Trace
+  participant Eval
+  participant Report
 
-  CLI->>Runner: run(dataset, configs)
-  Runner->>DL: load_tasks()
-  Runner->>CL: load(config)
-  Runner->>Safety: evaluate(action risk)
-  Safety-->>Runner: allow / require_approval / deny
-  Runner->>Adapter: run_task(task, config)
-  Adapter-->>Runner: output_text
-  Runner->>Sink: write(prompt_sent/model_output/tool_called/...)
-  Runner->>Eval: evaluate(output, expected)
-  Eval-->>Runner: scores + labels
+  CLI->>Orch: run(dataset, configs)
+  Orch->>Task: load/validate tasks
+  Orch->>Config: resolve config
+  Orch->>Safety: pre-check policies
+  Orch->>Adapter: execute task
+  Adapter-->>Trace: step events
+  Adapter-->>Orch: output
+  Orch->>Eval: evaluate output + trace
+  Eval-->>Orch: scores/labels
+  Orch->>Report: export artifacts
+  Report-->>CLI: run summary
 ```
 
-## TaskRun state model
+## State machines
 
+### Run state
 ```mermaid
 stateDiagram-v2
   [*] --> CREATED
-  CREATED --> RUNNING
+  CREATED --> QUEUED
+  QUEUED --> RUNNING
   RUNNING --> WAITING_APPROVAL
-  WAITING_APPROVAL --> RESUMED
-  WAITING_APPROVAL --> REJECTED
+  WAITING_APPROVAL --> RUNNING
   RUNNING --> EVALUATING
-  RESUMED --> EVALUATING
   EVALUATING --> COMPLETED
   RUNNING --> FAILED
-  RESUMED --> FAILED
   EVALUATING --> FAILED
+  WAITING_APPROVAL --> CANCELED
 ```
 
-## Validation contracts
-- Dataset rows must include: `task_id`, `instruction`, `modality`, `risk_label`.
-- Agent config must include provider/model/tools/budgets and valid numeric bounds.
-- Adapter must fail with actionable messages (path + field + reason).
+### Approval state
+```mermaid
+stateDiagram-v2
+  [*] --> PENDING
+  PENDING --> APPROVED
+  PENDING --> DENIED
+  PENDING --> EXPIRED
+  PENDING --> CANCELED
+```
 
-## Error handling strategy
-- User errors: deterministic validation exceptions with source context.
-- Integration errors: retriable wrappers for transient network/tool failures.
-- Safety errors: explicit deny responses, never silent fallthrough.
+## Event schema baseline
+Every event must include:
+- `event_id`
+- `run_id`
+- `task_run_id`
+- `event_type`
+- `timestamp`
+- `step_index`
+- `correlation_id`
+- `payload_json`
 
-## Internal extension points
-- `AgentAdapter` protocol for provider substitution.
-- `Evaluator` strategy for score composition.
-- `TraceSink` observer for local/cloud observability backends.
+## Error handling policy
+- Validation errors: deterministic with actionable field/path context.
+- Adapter/integration errors: retry according to policy; classify terminal vs transient.
+- Safety denials: explicit status and rationale, never silent continuation.
+
+## Implementation note
+See [32_openre_default_framework_spec.md](32_openre_default_framework_spec.md) for full formulas, scoring model, and subsystem coverage.

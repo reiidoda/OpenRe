@@ -40,7 +40,7 @@ sequenceDiagram
   participant E as Evaluators
   participant R as Reporter
 
-  U->>C: awb run/compare
+  U->>C: openre run/compare
   C->>O: start RunSession
   O->>S: pre-check action risk
   alt approval required

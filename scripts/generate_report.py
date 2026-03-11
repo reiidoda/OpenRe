@@ -13,6 +13,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     subprocess.run(
-        ["awb", "report", "--run-id", args.run_id, "--format", "html"],
+        ["openre", "report", "--run-id", args.run_id, "--format", "html"],
         check=True,
     )

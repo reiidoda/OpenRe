@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "open-agent-workbench"
 version = "0.1.0"
-description = "Workbench for benchmarking, tracing, optimizing, and safely operating multimodal agents."
+description = "OpenRe: the default framework for testing AI agents with benchmarks, traces, evals, and safety gates."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Open Agent Workbench Maintainers" }]
@@ -47,6 +47,7 @@ dev = [
 
 [project.scripts]
 awb = "agent_workbench.app.cli:main"
+openre = "agent_workbench.app.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/reiidoda/OpenRe"

@@ -1,69 +1,106 @@
 # Design Principles and UML
 
-## Design principles
-- Separation of concerns and clear bounded contexts.
-- SOLID for core domain abstractions.
-- DRY for shared policy and validation logic.
-- KISS and YAGNI for runtime-critical paths.
-- Explicit dependencies over hidden side effects.
+## Engineering principles
+1. Every run is reproducible.
+2. Every result is inspectable.
+3. Every risky action is auditable.
+4. Every benchmark is versioned.
+5. Plugin-first extensibility is preserved.
 
-## Design patterns in OpenRe
-- Strategy: evaluators, optimizers, retry policies.
-- Adapter: OpenAI/Opik/local providers.
-- Factory: config-based object construction.
-- Observer: trace/event subscribers.
-- Chain of Responsibility: safety rule pipeline.
-- State Machine: task lifecycle.
-- Repository: storage abstraction.
+## Required provenance fields
+- config fingerprint
+- git commit SHA
+- dependency snapshot
+- model identifier
+- prompt version
+- evaluator versions
 
-## UML class view
+## Patterns by subsystem
+- Agent adapters: Adapter, Abstract Factory.
+- Evaluators: Strategy, Composite.
+- Policies: Chain of Responsibility, rules-engine style.
+- Reporting: Builder, Template Method.
+- Tracing: Observer, event-sourcing concepts.
+- Run lifecycle: State Machine.
+- Persistence: Repository + Unit of Work.
 
-```mermaid
-classDiagram
-  class Runner
-  class TaskSpec
-  class AgentConfig
-  class TraceEvent
-  class EvaluationResult
-  class BenchmarkReport
-  class AgentAdapter
-  class Evaluator
-  class TraceSink
-  class ApprovalGateway
-
-  Runner --> TaskSpec
-  Runner --> AgentConfig
-  Runner --> AgentAdapter
-  Runner --> TraceSink
-  Runner --> Evaluator
-  Runner --> BenchmarkReport
-  ApprovalGateway --> Runner
-  TraceEvent --> Runner
-```
-
-## UML component view
+## Use case view
 
 ```mermaid
 flowchart LR
-  CLI["CLI/API"] --> Runner
-  Runner --> DatasetLoader
-  Runner --> ConfigLoader
-  Runner --> AgentAdapter
-  Runner --> TraceSink
-  Runner --> EvalHarness
-  Runner --> ReportExporter
-  Runner --> PolicyEngine
+  AIE["AI Engineer"] --> UC1["Define benchmark tasks"]
+  AIE --> UC2["Run/compare benchmarks"]
+  RES["Research Engineer"] --> UC3["Analyze traces and failures"]
+  PT["Product Team"] --> UC4["Gate release on regressions"]
+  REV["Reviewer"] --> UC5["Approve or deny risky actions"]
+  CI["CI System"] --> UC6["Execute regression pipeline"]
+  DEV["Plugin Developer"] --> UC7["Add adapter/evaluator/exporter plugins"]
 ```
 
-## UML deployment view
+## Class view
 
 ```mermaid
-flowchart TB
-  DevClient["User/Client"] --> Edge["CDN/Proxy"]
-  Edge --> ApiNode["API Nodes"]
-  ApiNode --> WorkerPool["Run Workers"]
-  ApiNode --> Cache["Redis"]
-  WorkerPool --> DBCluster["Domain DB Cluster"]
-  WorkerPool --> Broker["Event Broker"]
-  Broker --> Analytics["Trace/Metrics Pipeline"]
+classDiagram
+  class TaskSpec
+  class AgentConfig
+  class RunSession
+  class TaskRun
+  class TraceEvent
+  class EvaluationResult
+  class ApprovalRequest
+  class BenchmarkReport
+
+  RunSession --> TaskRun
+  TaskRun --> TaskSpec
+  RunSession --> AgentConfig
+  TaskRun --> TraceEvent
+  TaskRun --> EvaluationResult
+  TaskRun --> ApprovalRequest
+  RunSession --> BenchmarkReport
+```
+
+## Sequence view: benchmark execution
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant CLI
+  participant Orch as Orchestrator
+  participant Safety
+  participant Adapter
+  participant Trace
+  participant Eval
+  participant Report
+
+  User->>CLI: openre test benchmark.yaml
+  CLI->>Orch: create run
+  Orch->>Safety: pre-check action policy
+  Orch->>Adapter: execute task
+  Adapter-->>Trace: emit step events
+  Adapter-->>Orch: final output
+  Orch->>Eval: evaluate output + trace
+  Eval-->>Orch: scores
+  Orch->>Report: build artifacts
+  Orch-->>CLI: summary + artifact paths
+```
+
+## Sequence view: risky action approval
+
+```mermaid
+sequenceDiagram
+  participant Agent
+  participant Safety
+  participant Policy
+  participant Queue
+  participant Reviewer
+  participant Audit
+
+  Agent->>Safety: request risky action
+  Safety->>Policy: assess
+  Policy-->>Safety: require_approval
+  Safety->>Queue: enqueue request
+  Reviewer->>Queue: approve or deny
+  Queue->>Safety: decision
+  Safety->>Agent: resume or block
+  Safety->>Audit: append immutable log
 ```

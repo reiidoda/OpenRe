@@ -1,56 +1,74 @@
 # Database Strategy and Distributed Data Design
 
-## Database strategy
-Use domain-owned data stores with explicit contracts between domains.
+## Strategy
+Use domain-owned data stores with explicit contracts. Avoid tightly-coupled shared schemas across bounded contexts.
 
-## Domain database topology
-- `machine_db`: machine inventory, capabilities, state.
-- `request_db`: incoming requests and lifecycle status.
-- `confirmation_db`: approvals, denials, approver metadata.
-- `run_db`: benchmark run/session metadata.
-- `trace_db`: high-volume NDJSON/event records.
-- `eval_db`: scores, labels, regressions.
-- `audit_db`: immutable policy and security events.
+## Core storage classes
 
-## Inter-database dependency model
+Relational state (primary):
+- tasks
+- configs
+- runs
+- task runs
+- evaluations
+- approvals
+- reports metadata
 
-```mermaid
-flowchart LR
-  MachineDB["machine_db"] --> RequestDB["request_db"]
-  RequestDB --> ConfirmationDB["confirmation_db"]
-  RequestDB --> RunDB["run_db"]
-  RunDB --> TraceDB["trace_db"]
-  RunDB --> EvalDB["eval_db"]
-  ConfirmationDB --> AuditDB["audit_db"]
-  TraceDB --> AuditDB
-  EvalDB --> AuditDB
-```
+Trace/event data:
+- append-only event records
+- optional derived/materialized views for query-heavy dashboards
 
-## Consistency strategy
-- Strong consistency: approvals, billing, security policy decisions.
-- Eventual consistency: analytics, derived reports, non-critical read models.
-- Monotonic reads for operator-facing dashboards.
+Artifact storage:
+- JSON/CSV/HTML reports
+- screenshots
+- tool outputs
+- run attachments
 
-## Cross-database transaction strategy
-- Avoid synchronous 2PC across domains.
-- Use outbox pattern + idempotent consumers.
-- Use saga orchestration for multi-step workflows.
+Cache/coordination:
+- Redis for queue coordination, cache, and lightweight locks
 
-## Data contracts
-- Every event has `event_id`, `correlation_id`, `causation_id`, `timestamp`.
-- Every domain record has immutable `created_at`, mutable `updated_at`, and `version` for optimistic concurrency.
+Optional semantic index:
+- vector store for semantic trace/task search
 
-## Storage technology guidance
-- Operational metadata: PostgreSQL/Cloud SQL.
-- High-volume traces: columnar/log store (ClickHouse/OpenSearch/BigQuery).
-- Cache/state acceleration: Redis.
-- Artifacts: object store with lifecycle policies.
+## Domain data topology example
+- `run_db`
+- `trace_db`
+- `eval_db`
+- `approval_db`
+- `report_db`
+- `audit_db`
 
-## Backup and retention
-- PITR for operational DBs.
-- Immutable archive for audit and approval data.
-- Tiered retention by data class (hot/warm/cold).
+## Consistency model
+- strong consistency for approvals, security policy decisions, billing-sensitive paths
+- eventual consistency for analytics/leaderboards/derived trend views
+- idempotent writes for event consumers
 
-## Source-informed rationale
-- Domain boundaries and data ownership (Building Microservices).
-- Distributed consistency tradeoffs and event streams (DDIA).
+## Cross-domain transaction model
+- avoid distributed 2PC
+- use outbox pattern
+- use idempotent consumers
+- use saga-style orchestration for multi-step workflows
+
+## Event contract baseline
+Required fields:
+- `event_id`
+- `correlation_id`
+- `causation_id`
+- `timestamp`
+- `event_type`
+- `version`
+
+## Retention and backup
+- PITR for operational relational stores
+- immutable retention tier for audit logs
+- lifecycle policies for large trace/artifact data
+- scheduled restore drills with RPO/RTO objectives
+
+## Distributed runtime considerations
+- partition by run_id/benchmark_id for horizontal scale
+- backpressure and admission controls
+- queue depth and p95 latency SLO monitoring
+- retry with dead-letter handling for failing workers
+
+## Reference
+See [32_openre_default_framework_spec.md](32_openre_default_framework_spec.md) for full deployment and subsystem context.
