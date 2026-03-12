@@ -48,3 +48,9 @@ Candidate generation -> run -> evaluate -> rank -> select -> validate.
 - Run isolated validation on `splits/test.jsonl` for the dev winner only.
 - Promotion is explicit and recorded with a boolean decision + reason.
 - Current implementation: `DevTestOptimizationLoop` (`src/agent_workbench/optimizer/dev_test_loop.py`).
+
+## Best-config registry
+- Persisted store: `.artifacts/state/best_configs.json`.
+- Stored record includes `config_id`, `score_breakdown`, `objective_score`, and `updated_at` timestamp.
+- Updates are atomic via temp-file write + `os.replace`.
+- CLI retrieval: `openre best-config --dataset <dataset_path_or_id>`.
