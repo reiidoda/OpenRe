@@ -13,6 +13,7 @@ from typing import TextIO
 
 import yaml
 
+from agent_workbench.optimizer.best_config_registry import BestConfigRegistry
 from agent_workbench.optimizer.config_search import WeightedObjectiveRanker
 from agent_workbench.optimizer.dev_test_loop import DevTestOptimizationLoop
 from agent_workbench.orchestration.runner import Runner
@@ -48,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     optimize = sub.add_parser("optimize", help="Run optimizer search")
     optimize.add_argument("--dataset", required=True)
     optimize.add_argument("--search-space", required=True)
+
+    best_config = sub.add_parser("best-config", help="Get current best config for a dataset")
+    best_config.add_argument("--dataset", required=True)
 
     approve = sub.add_parser("approve", help="Resolve approval request")
     approve.add_argument("--request-id", required=True)
@@ -88,6 +92,10 @@ def _as_mapping(value: object, field_name: str) -> dict[str, object]:
 def _load_search_space(path: Path) -> dict[str, object]:
     loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
     return _as_mapping(loaded, str(path))
+
+
+def _dataset_id(dataset_arg: str) -> str:
+    return Path(dataset_arg).name
 
 
 def _load_candidates(search_space: dict[str, object]) -> list[dict[str, object]]:
@@ -157,6 +165,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             search_space_path = Path(args.search_space)
             search_space = _load_search_space(search_space_path)
             candidates = _load_candidates(search_space)
+            dataset_id = _dataset_id(args.dataset)
 
             ranker_config_raw = search_space.get("ranker")
             ranker_config = ranker_config_raw if isinstance(ranker_config_raw, dict) else {}
@@ -179,14 +188,51 @@ def main(argv: Sequence[str] | None = None) -> int:
                     objective_metrics=objective_metrics,
                 ),
             )
+            best_record: dict[str, object] | None = None
+            if result.promoted and result.selected_candidate_id:
+                selected_candidate = next(
+                    (
+                        candidate
+                        for candidate in candidates
+                        if str(candidate.get("candidate_id")) == result.selected_candidate_id
+                    ),
+                    None,
+                )
+                if selected_candidate is not None:
+                    selected_metrics = _metrics_for_split(
+                        candidate=selected_candidate,
+                        split="test",
+                        objective_metrics=objective_metrics,
+                    )
+                    scored_candidate = {
+                        "candidate_id": result.selected_candidate_id,
+                        **selected_metrics,
+                    }
+                    registry = BestConfigRegistry(
+                        store_path=Path(args.artifact_root) / "state" / "best_configs.json"
+                    )
+                    best_record = registry.set(
+                        dataset_id,
+                        result.selected_candidate_id,
+                        score_breakdown=ranker.score_breakdown(scored_candidate),
+                        objective_score=ranker.score(scored_candidate),
+                        metadata={
+                            "source": "optimize",
+                            "search_space": args.search_space,
+                            "dev_run_id": result.dev.run_id,
+                            "test_run_id": result.test.run_id,
+                        },
+                    )
             _emit(
                 {
                     "command": "optimize",
-                    "dataset": args.dataset,
+                    "dataset": dataset_id,
                     "search_space": args.search_space,
                     "selected_candidate_id": result.selected_candidate_id,
                     "promoted": result.promoted,
                     "promotion_reason": result.promotion_reason,
+                    "registry_updated": bool(best_record),
+                    "best_config": best_record,
                     "dev_run": {
                         "run_id": result.dev.run_id,
                         "task_ids": result.dev.task_ids,
@@ -201,6 +247,31 @@ def main(argv: Sequence[str] | None = None) -> int:
                         "candidate_scores": result.test.candidate_scores,
                         "selected_candidate_id": result.test.selected_candidate_id,
                     },
+                }
+            )
+            return 0
+
+        if args.command == "best-config":
+            dataset_id = _dataset_id(args.dataset)
+            registry = BestConfigRegistry(
+                store_path=Path(args.artifact_root) / "state" / "best_configs.json"
+            )
+            record = registry.get(dataset_id)
+            if record is None:
+                _emit(
+                    {
+                        "command": "best-config",
+                        "dataset": dataset_id,
+                        "status": "not_found",
+                    }
+                )
+                return 0
+            _emit(
+                {
+                    "command": "best-config",
+                    "dataset": dataset_id,
+                    "status": "ok",
+                    "best_config": record,
                 }
             )
             return 0

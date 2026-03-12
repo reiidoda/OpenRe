@@ -10,7 +10,7 @@ def _parse_stdout_json(captured: str) -> dict[str, object]:
 
 def test_help_lists_v1_commands() -> None:
     help_text = build_parser().format_help()
-    for command in ["run", "compare", "eval", "optimize", "approve", "report"]:
+    for command in ["run", "compare", "eval", "optimize", "best-config", "approve", "report"]:
         assert command in help_text
 
 
@@ -144,17 +144,76 @@ def test_cli_optimize_outputs_json(capsys) -> None:
 
     payload = _parse_stdout_json(capsys.readouterr().out)
     assert payload["command"] == "optimize"
-    assert payload["dataset"] == "datasets/research_assistant_v1"
+    assert payload["dataset"] == "research_assistant_v1"
     assert payload["search_space"] == "configs/search/dev_test_loop.yaml"
     assert payload["selected_candidate_id"] == "candidate_a"
     assert payload["promoted"] is True
     assert payload["promotion_reason"] == "Candidate promoted."
+    assert payload["registry_updated"] is True
+    assert payload["best_config"]["config_id"] == "candidate_a"
+    assert payload["best_config"]["score_breakdown"]["task_quality"] > 0.0
+    assert isinstance(payload["best_config"]["updated_at"], str)
     assert payload["dev_run"]["run_id"].startswith("optdev_")
     assert payload["test_run"]["run_id"].startswith("opttest_")
     assert payload["dev_run"]["task_ids"] == ["ra_004"]
     assert payload["test_run"]["task_ids"] == ["ra_005"]
     assert payload["dev_run"]["ranking"][0] == "candidate_a"
     assert payload["test_run"]["ranking"] == ["candidate_a"]
+
+
+def test_cli_best_config_not_found(capsys, tmp_path: Path) -> None:
+    code = main(
+        [
+            "--artifact-root",
+            str(tmp_path / "artifacts"),
+            "best-config",
+            "--dataset",
+            "datasets/research_assistant_v1",
+        ]
+    )
+    assert code == 0
+
+    payload = _parse_stdout_json(capsys.readouterr().out)
+    assert payload == {
+        "command": "best-config",
+        "dataset": "research_assistant_v1",
+        "status": "not_found",
+    }
+
+
+def test_cli_best_config_after_optimize(capsys, tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts"
+    optimize_code = main(
+        [
+            "--artifact-root",
+            str(artifact_root),
+            "optimize",
+            "--dataset",
+            "datasets/research_assistant_v1",
+            "--search-space",
+            "configs/search/dev_test_loop.yaml",
+        ]
+    )
+    assert optimize_code == 0
+    capsys.readouterr()
+
+    code = main(
+        [
+            "--artifact-root",
+            str(artifact_root),
+            "best-config",
+            "--dataset",
+            "datasets/research_assistant_v1",
+        ]
+    )
+    assert code == 0
+
+    payload = _parse_stdout_json(capsys.readouterr().out)
+    assert payload["command"] == "best-config"
+    assert payload["dataset"] == "research_assistant_v1"
+    assert payload["status"] == "ok"
+    assert payload["best_config"]["config_id"] == "candidate_a"
+    assert isinstance(payload["best_config"]["updated_at"], str)
 
 
 def test_cli_approve_outputs_json(capsys) -> None:
